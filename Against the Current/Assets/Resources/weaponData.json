@@ -1,0 +1,7 @@
+{
+  "weapon": 
+  {
+    "sword": { "ATK": 5 },
+    "blade": { "ATK": 7 }
+  }
+}

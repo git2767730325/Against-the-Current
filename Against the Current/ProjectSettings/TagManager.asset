@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - equipment
+  - weapon
+  - GM
   layers:
   - Default
   - TransparentFX
@@ -14,13 +16,13 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Ground
+  - Weapon
+  - enemy
+  - player
+  - sensor
+  - caster
+  - processing
   - 
   - 
   - 
