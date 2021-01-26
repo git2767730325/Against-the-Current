@@ -47,6 +47,7 @@
   <PropertyGroup>
     <ProjectTypeGuids>{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <UnityProjectGenerator>Unity/VSTU</UnityProjectGenerator>
+    <UnityProjectGeneratorVersion>4.8.2.0</UnityProjectGeneratorVersion>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows64:19</UnityBuildTarget>
     <UnityVersion>2019.4.13f1c1</UnityVersion>
@@ -63,6 +64,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\BagPanel.cs" />
     <Compile Include="Assets\DefaultPlayables\LightControl\LightControlBehaviour.cs" />
     <Compile Include="Assets\DefaultPlayables\LightControl\LightControlClip.cs" />
     <Compile Include="Assets\DefaultPlayables\LightControl\LightControlMixerBehaviour.cs" />
@@ -91,41 +93,48 @@
     <Compile Include="Assets\DefaultPlayables\Video\VideoSchedulerPlayableBehaviour.cs" />
     <Compile Include="Assets\DefaultPlayables\Video\VideoScriptPlayableAsset.cs" />
     <Compile Include="Assets\DefaultPlayables\Video\VideoScriptPlayableTrack.cs" />
-    <Compile Include="Assets\EventCasterManager.cs" />
-    <Compile Include="Assets\GameManager.cs" />
-    <Compile Include="Assets\InterActorManager.cs" />
+    <Compile Include="Assets\ItemPanel.cs" />
     <Compile Include="Assets\JSON\JSONObject.cs" />
     <Compile Include="Assets\JSON\VectorTemplates.cs" />
     <Compile Include="Assets\MyPlayable\MyPlayableBehaviour.cs" />
     <Compile Include="Assets\MyPlayable\MyPlayableClip.cs" />
     <Compile Include="Assets\MyPlayable\MyPlayableMixerBehaviour.cs" />
     <Compile Include="Assets\MyPlayable\MyPlayableTrack.cs" />
-    <Compile Include="Assets\PlayTimeline.cs" />
     <Compile Include="Assets\Scirpts\ActorController.cs" />
     <Compile Include="Assets\Scirpts\ActorManager.cs" />
     <Compile Include="Assets\Scirpts\BattleManager.cs" />
     <Compile Include="Assets\Scirpts\CameraController.cs" />
-    <Compile Include="Assets\Scirpts\DataBase.cs" />
     <Compile Include="Assets\Scirpts\DirectorManager.cs" />
     <Compile Include="Assets\Scirpts\DummyHandle.cs" />
+    <Compile Include="Assets\Scirpts\EventCasterManager.cs" />
     <Compile Include="Assets\Scirpts\FSM\FSMClearSignals.cs" />
     <Compile Include="Assets\Scirpts\FSM\FSMOnEnter.cs" />
     <Compile Include="Assets\Scirpts\FSM\FSMOnExit.cs" />
     <Compile Include="Assets\Scirpts\FSM\FSMOnStay.cs" />
+    <Compile Include="Assets\Scirpts\GameManager.cs" />
+    <Compile Include="Assets\Scirpts\Grid.cs" />
     <Compile Include="Assets\Scirpts\Helper\TransformHelpers.cs" />
     <Compile Include="Assets\Scirpts\IActorManagerInterface.cs" />
     <Compile Include="Assets\Scirpts\IUserInput.cs" />
+    <Compile Include="Assets\Scirpts\InterActorManager.cs" />
     <Compile Include="Assets\Scirpts\LeftArmAnimtorFix.cs" />
-    <Compile Include="Assets\Scirpts\MyButton.cs" />
-    <Compile Include="Assets\Scirpts\MyTimer.cs" />
     <Compile Include="Assets\Scirpts\OnGroundSensor.cs" />
+    <Compile Include="Assets\Scirpts\PlayTimeline.cs" />
     <Compile Include="Assets\Scirpts\PlayerHandle.cs" />
     <Compile Include="Assets\Scirpts\RootMotionControl.cs" />
+    <Compile Include="Assets\Scirpts\Socket\EquipScene.cs" />
+    <Compile Include="Assets\Scirpts\Socket\LoginManager.cs" />
     <Compile Include="Assets\Scirpts\StateManager.cs" />
     <Compile Include="Assets\Scirpts\WeaponControl.cs" />
-    <Compile Include="Assets\Scirpts\WeaponFactory.cs" />
+    <Compile Include="Assets\Scirpts\WeaponData.cs" />
     <Compile Include="Assets\Scirpts\WeaponManager.cs" />
-    <Compile Include="Assets\WeaponData.cs" />
+    <Compile Include="Assets\Scirpts\class\Client.cs" />
+    <Compile Include="Assets\Scirpts\class\DataBase.cs" />
+    <Compile Include="Assets\Scirpts\class\Item.cs" />
+    <Compile Include="Assets\Scirpts\class\MyButton.cs" />
+    <Compile Include="Assets\Scirpts\class\MyTimer.cs" />
+    <Compile Include="Assets\Scirpts\class\WeaponFactory.cs" />
+    <Compile Include="Assets\Scirpts\testBag.cs" />
     <None Include="Assets\JSON\readme.txt" />
     <Reference Include="UnityEngine">
       <HintPath>D:/unity3D/2019.4.13f1c1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
@@ -309,6 +318,9 @@
     </Reference>
     <Reference Include="UnityEditor">
       <HintPath>D:/unity3D/2019.4.13f1c1/Editor/Data/Managed/UnityEditor.dll</HintPath>
+    </Reference>
+    <Reference Include="LitJson">
+      <HintPath>D:/tryNtimes/Against-the-Current/Against the Current/Assets/JSON/LitJson.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor.iOS.Extensions.Xcode">
       <HintPath>D:/unity3D/2019.4.13f1c1/Editor/Data/PlaybackEngines/iOSSupport/UnityEditor.iOS.Extensions.Xcode.dll</HintPath>

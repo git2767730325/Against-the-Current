@@ -5,6 +5,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{8C4F51B9-55CC-B05D-FC12-1B2BD9F55EE0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{631FE784-B00B-4144-A4D0-C3E64A68D4CF}"
+	ProjectSection(SolutionItems) = preProject
+		C:\Users\刘兆帆\Desktop\LitJSON_jb51\X86\2.3.7\LitJson.dll = C:\Users\刘兆帆\Desktop\LitJSON_jb51\X86\2.3.7\LitJson.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
