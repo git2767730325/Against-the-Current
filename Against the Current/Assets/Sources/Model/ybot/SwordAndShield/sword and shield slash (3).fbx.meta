@@ -477,7 +477,7 @@ ModelImporter:
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
-      - time: 0.41084817
+      - time: 0.44858402
         functionName: WeaponDisable
         data: 
         objectReferenceParameter: {instanceID: 0}

@@ -39,7 +39,7 @@ public class CameraController : MonoBehaviour
         if (!isAI)
         {
             camera = Camera.main.transform.gameObject;//主相机,注意标签对
-            //Cursor.lockState = CursorLockMode.Locked;
+           // Cursor.lockState = CursorLockMode.Locked;//锁定模式
             lockImg.enabled = false;
         }
         lockTarget = new LockTarget(null);
@@ -47,6 +47,7 @@ public class CameraController : MonoBehaviour
 
     private void Update()
     {
+
         if (lockTarget.obj!= null)
         {
             if (!isAI)
@@ -56,8 +57,6 @@ public class CameraController : MonoBehaviour
             }
             yourtime.Tick();
         }
-        if (Input.GetKeyDown(KeyCode.C))
-            LockUnLock();
     }
     // Update is called once per frame
     void FixedUpdate()
@@ -77,7 +76,7 @@ public class CameraController : MonoBehaviour
 
         if (lockTarget.obj != null)
         {//锁定下~~~~~~~~~~~~~~~~~~~~~~~~~
-        if(Vector3.Distance(lockTarget.obj.transform.position,model.transform.position)>10.0f)
+        if(Vector3.Distance(lockTarget.obj.transform.position,model.transform.position)>12.0f)
         {
                 lockState = false;
                 lockTarget.obj = null;
@@ -90,7 +89,7 @@ public class CameraController : MonoBehaviour
             //看向
             if (!isAI)
             {
-                camera.transform.LookAt(lockTarget.obj.transform.position - new Vector3(0, lockTarget.halfHeight / 1.2f, 0));
+                camera.transform.LookAt(lockTarget.obj.transform.position + new Vector3(0, lockTarget.halfHeight / 1.2f, 0));//距离修正视野高低
                 playHandle.transform.forward = new Vector3(camera.transform.forward.x, 0f, camera.transform.forward.z);
             }
             else//让AI锁定后能面向玩家
@@ -101,11 +100,11 @@ public class CameraController : MonoBehaviour
             lockState = true;
 
             if(yourtime.state==MyTimer.State.IDLE)
-            yourtime.StartTimer(0.3f);
+                yourtime.StartTimer(0.3f);
             if (yourtime.state == MyTimer.State.FINISHED)
             {
                 yourtime.state = MyTimer.State.IDLE;
-                float alp = Random.Range(40, 100);//可以实现远离变浅色
+                float alp = Random.Range(200, 255)-Vector3.Distance(lockTarget.obj.transform.position, model.transform.position)*15;//可以实现远离变浅色
                 lockImg.color = new Color(1, 1, 1, alp / 255f);
             }
         }
@@ -118,7 +117,7 @@ public class CameraController : MonoBehaviour
             {
                 playHandle.transform.Rotate(Vector3.up, ph.Jright * sensitivity * Time.fixedDeltaTime);//只有这个的话，物体也会跟着旋转
                 eulerAnglesX -= -ph.Jup * sensitivity * Time.fixedDeltaTime;
-                eulerAnglesX = Mathf.Clamp(eulerAnglesX, -30, 40);
+                eulerAnglesX = Mathf.Clamp(eulerAnglesX, -16, 50);
                 cameraHandle.transform.localEulerAngles = new Vector3(eulerAnglesX, 0, 0);//上下移动视角
                 model.transform.eulerAngles = modelEuler;
                 camera.transform.LookAt(cameraHandle.transform);
@@ -133,12 +132,16 @@ public class CameraController : MonoBehaviour
 
     public void LockUnLock()
     {
-        Collider[] cols=Physics.OverlapBox(model.transform.position+(model.transform.forward*5f), halfBoxCol,model.transform.rotation, isAI?LayerMask.GetMask("player"):LayerMask.GetMask("enemy"));
+
+        //判断敌人是否在模型父物体的正前方（类似屏幕前方的效果）特定范围
+        Collider[] cols=Physics.OverlapBox(model.transform.position+(model.transform.parent.forward*5f), halfBoxCol,model.transform.parent.rotation, isAI?LayerMask.GetMask("player"):LayerMask.GetMask("enemy"));
+        //模型面向发出箱子判断是否有物体
+        //Collider[] cols=Physics.OverlapBox(model.transform.position+(model.transform.forward*5f), halfBoxCol,model.transform.rotation, isAI?LayerMask.GetMask("player"):LayerMask.GetMask("enemy"));
         if (cols.Length > 0)
         {
             foreach (Collider col in cols)
             {
-                if (lockTarget.obj == null || lockTarget.obj != col.transform.gameObject)
+                if (lockTarget.obj == null || lockTarget.obj != col.transform.gameObject)//后面判断多余了
                 {
                     lockTarget =new LockTarget(col.transform.gameObject);
                     if(!isAI)
@@ -147,6 +150,7 @@ public class CameraController : MonoBehaviour
                     lockTarget.halfHeight = col.bounds.extents.y/2;
                     break;
                 }
+                //持续锁定，后面这个用不上了
                 else if (col.transform.gameObject == lockTarget.obj)
                 {
                     lockTarget.obj = null;
@@ -156,17 +160,30 @@ public class CameraController : MonoBehaviour
                 }
             }
         }
-        else //没有敌人时解除锁定
+        else //没有敌人时解除锁定，并且面向模型前方
         {
             lockTarget.obj = null;
                     if(!isAI)
             lockImg.enabled = false;
             lockState = false;
+            //没有目标就面向模型前方，如果模型在与父类对齐视角会发生不可预料的视角偏移(向视角前方)
+            if (playHandle.GetComponent<ActorController>().GetLookForwardBool())
+            {
+                model.transform.parent.forward = model.transform.forward;
+                model.transform.forward = model.transform.parent.forward;
+            }
         }
     }
 
-
-    private class LockTarget
+    public void CancelLock()
+    {
+        lockState = false;
+        lockTarget.obj = null;
+        if (!isAI)
+            lockImg.enabled = false;
+        lockState = false;
+    }//取消锁定
+    private class LockTarget//初始化类
     {
         public float halfHeight;
         public GameObject obj;

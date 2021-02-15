@@ -64,7 +64,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\BagPanel.cs" />
     <Compile Include="Assets\DefaultPlayables\LightControl\LightControlBehaviour.cs" />
     <Compile Include="Assets\DefaultPlayables\LightControl\LightControlClip.cs" />
     <Compile Include="Assets\DefaultPlayables\LightControl\LightControlMixerBehaviour.cs" />
@@ -93,17 +92,21 @@
     <Compile Include="Assets\DefaultPlayables\Video\VideoSchedulerPlayableBehaviour.cs" />
     <Compile Include="Assets\DefaultPlayables\Video\VideoScriptPlayableAsset.cs" />
     <Compile Include="Assets\DefaultPlayables\Video\VideoScriptPlayableTrack.cs" />
-    <Compile Include="Assets\ItemPanel.cs" />
     <Compile Include="Assets\JSON\JSONObject.cs" />
     <Compile Include="Assets\JSON\VectorTemplates.cs" />
     <Compile Include="Assets\MyPlayable\MyPlayableBehaviour.cs" />
     <Compile Include="Assets\MyPlayable\MyPlayableClip.cs" />
     <Compile Include="Assets\MyPlayable\MyPlayableMixerBehaviour.cs" />
     <Compile Include="Assets\MyPlayable\MyPlayableTrack.cs" />
+    <Compile Include="Assets\Scirpts\AI\AI_ActorControl.cs" />
+    <Compile Include="Assets\Scirpts\AI\AI_Enemy.cs" />
+    <Compile Include="Assets\Scirpts\AI\Enemy_SIght.cs" />
     <Compile Include="Assets\Scirpts\ActorController.cs" />
     <Compile Include="Assets\Scirpts\ActorManager.cs" />
+    <Compile Include="Assets\Scirpts\BagPanel.cs" />
     <Compile Include="Assets\Scirpts\BattleManager.cs" />
     <Compile Include="Assets\Scirpts\CameraController.cs" />
+    <Compile Include="Assets\Scirpts\Dialogue.cs" />
     <Compile Include="Assets\Scirpts\DirectorManager.cs" />
     <Compile Include="Assets\Scirpts\DummyHandle.cs" />
     <Compile Include="Assets\Scirpts\EventCasterManager.cs" />
@@ -111,20 +114,29 @@
     <Compile Include="Assets\Scirpts\FSM\FSMOnEnter.cs" />
     <Compile Include="Assets\Scirpts\FSM\FSMOnExit.cs" />
     <Compile Include="Assets\Scirpts\FSM\FSMOnStay.cs" />
+    <Compile Include="Assets\Scirpts\FixBagPos.cs" />
     <Compile Include="Assets\Scirpts\GameManager.cs" />
     <Compile Include="Assets\Scirpts\Grid.cs" />
     <Compile Include="Assets\Scirpts\Helper\TransformHelpers.cs" />
     <Compile Include="Assets\Scirpts\IActorManagerInterface.cs" />
     <Compile Include="Assets\Scirpts\IUserInput.cs" />
     <Compile Include="Assets\Scirpts\InterActorManager.cs" />
+    <Compile Include="Assets\Scirpts\ItemPanel.cs" />
+    <Compile Include="Assets\Scirpts\ItemTipText.cs" />
     <Compile Include="Assets\Scirpts\LeftArmAnimtorFix.cs" />
     <Compile Include="Assets\Scirpts\OnGroundSensor.cs" />
-    <Compile Include="Assets\Scirpts\PlayTimeline.cs" />
+    <Compile Include="Assets\Scirpts\PickItem.cs" />
     <Compile Include="Assets\Scirpts\PlayerHandle.cs" />
+    <Compile Include="Assets\Scirpts\RewardItem.cs" />
     <Compile Include="Assets\Scirpts\RootMotionControl.cs" />
     <Compile Include="Assets\Scirpts\Socket\EquipScene.cs" />
     <Compile Include="Assets\Scirpts\Socket\LoginManager.cs" />
     <Compile Include="Assets\Scirpts\StateManager.cs" />
+    <Compile Include="Assets\Scirpts\Time\AgainstTheCurrent.cs" />
+    <Compile Include="Assets\Scirpts\Time\TimeComeBack.cs" />
+    <Compile Include="Assets\Scirpts\Time\TimeInformation.cs" />
+    <Compile Include="Assets\Scirpts\Time\TimePoint.cs" />
+    <Compile Include="Assets\Scirpts\UIManager.cs" />
     <Compile Include="Assets\Scirpts\WeaponControl.cs" />
     <Compile Include="Assets\Scirpts\WeaponData.cs" />
     <Compile Include="Assets\Scirpts\WeaponManager.cs" />
@@ -133,9 +145,21 @@
     <Compile Include="Assets\Scirpts\class\Item.cs" />
     <Compile Include="Assets\Scirpts\class\MyButton.cs" />
     <Compile Include="Assets\Scirpts\class\MyTimer.cs" />
+    <Compile Include="Assets\Scirpts\class\ObjectPool.cs" />
     <Compile Include="Assets\Scirpts\class\WeaponFactory.cs" />
     <Compile Include="Assets\Scirpts\testBag.cs" />
+    <Compile Include="Assets\UI\Bullets.cs" />
+    <Compile Include="Assets\UI\SwordVFX.cs" />
+    <Compile Include="Assets\VFX\FX_Simple_Shining_Pack1\Script\DemoController.cs" />
+    <Compile Include="Assets\test2dTri.cs" />
     <None Include="Assets\JSON\readme.txt" />
+    <None Include="Assets\Material\Shader\cop.shader" />
+    <None Include="Assets\VFX\FX_Simple_Shining_Pack1\readme.txt" />
+    <None Include="Assets\Resources\dia.txt" />
+    <None Include="Assets\Material\Shader\cop2.shader" />
+    <None Include="Assets\Sources\Knight\shaders\clothshader.shader" />
+    <None Include="Assets\Sources\Knight\shaders\particledistort.shader" />
+    <None Include="Assets\Resources\itemtip.txt" />
     <Reference Include="UnityEngine">
       <HintPath>D:/unity3D/2019.4.13f1c1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>

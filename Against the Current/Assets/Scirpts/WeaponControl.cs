@@ -14,4 +14,8 @@ public class WeaponControl : MonoBehaviour
     {
         return wd.ATK;
     }
+    //public float GetDurable()
+    //{
+    //    return wd.durable;
+    //}
 }

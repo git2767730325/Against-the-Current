@@ -1,7 +1,7 @@
 {
   "weapon": 
   {
-    "sword": { "ATK": 5 },
-    "blade": { "ATK": 7 }
+    "shielda": { "DEF": 5 ,"durable": 150},
+    "shieldb": { "DEF": 7 ,"durable": 250}
   }
 }

@@ -7,7 +7,8 @@ using UnityEngine.Timeline;
 public class MyPlayableClip : PlayableAsset, ITimelineClipAsset
 {
     public MyPlayableBehaviour template = new MyPlayableBehaviour ();
-    public ExposedReference<ActorManager> myCamera;
+    //ExposedReference泛型，创建对场景对象的引用。
+    public ExposedReference<ActorManager> amPlayable;
 
     public ClipCaps clipCaps
     {
@@ -17,11 +18,10 @@ public class MyPlayableClip : PlayableAsset, ITimelineClipAsset
     public override Playable CreatePlayable (PlayableGraph graph, GameObject owner)
     {
         var playable = ScriptPlayable<MyPlayableBehaviour>.Create (graph, template);
+        //不可缺少
         MyPlayableBehaviour clone = playable.GetBehaviour ();
-        //初始化
-       // myCamera.exposedName = new PropertyName(GetInstanceID().ToString());
-        clone.myCamera = myCamera.Resolve (graph.GetResolver ());
-        //myCamera=new Vector3(0,0,1);
+        amPlayable.exposedName =GetInstanceID().ToString();
+        clone.amPlayable = amPlayable.Resolve (graph.GetResolver ());
         return playable;
     }
 }

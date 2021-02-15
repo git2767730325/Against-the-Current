@@ -449,8 +449,8 @@ ModelImporter:
       name: attack3
       takeName: mixamo.com
       internalID: 0
-      firstFrame: 0
-      lastFrame: 43
+      firstFrame: 2
+      lastFrame: 41
       wrapMode: 0
       orientationOffsetY: 0
       level: 0

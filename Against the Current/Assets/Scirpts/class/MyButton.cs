@@ -22,9 +22,9 @@ public class MyButton
     MyTimer myTimer2=new MyTimer();//延时时间判断长按
     public void Tick(bool input)//外部调用
     {
-            myTimer.Tick();
-            myTimer2.Tick();
-            IsPressing = input;
+        myTimer.Tick();
+        myTimer2.Tick();
+        IsPressing = input;
         curState = IsPressing;
         if (input)
         {
@@ -35,7 +35,8 @@ public class MyButton
             }
             else
                 OnPressed = false;
-                OnReleased= false;
+
+            OnReleased= false;
             //lastState = true;
         }
         else
@@ -50,8 +51,8 @@ public class MyButton
             else
             {
                 OnReleased = false;
-                OnPressed = false;
             }
+            OnPressed = false;
         }
             IsExtending = (myTimer.state == MyTimer.State.RUN);//通过计时来判断是否延时按键
             lastState =curState;

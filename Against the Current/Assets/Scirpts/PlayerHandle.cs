@@ -59,8 +59,18 @@ public class PlayerHandle : IUserInput
         KeyC.Tick(Input.GetKey(keyC));
         KeyD.Tick(Input.GetKey(keyD));
         Btn1.Tick(Input.GetKey(btn1));
-        Btn2.Tick(Input.GetKey(btn2));
-        Btn3.Tick(Input.GetKey(btn3));
+        Btn2.Tick(Input.GetKey(btn2));//上子弹
+        Btn3.Tick(Input.GetKey(btn3));//枪态
+        Btn4.Tick(Input.GetKey(btn4));//切换模式
+        Btn5.Tick(Input.GetKey(btnT1));//时光
+        Btn6.Tick(Input.GetKey(btnT2));//逆流
+        Btn7.Tick(Input.GetKey(btnT3));//子弹时间
+        Btn8.Tick(Input.GetKey(btnA));//蹲下
+        Btn9.Tick(Input.GetKey(btnB));//
+        BtnUI1.Tick(Input.GetKey(btnUI1));//物品栏
+        BtnUI2.Tick(Input.GetKey(btnUI2));//人物信息
+        BtnUI3.Tick(Input.GetKey(btnUI3));//小地图
+        BtnUI4.Tick(Input.GetKey(btnUI4));//菜单
         if (mouseEnable)
         {
             Jup = Input.GetAxis("Mouse Y")*-mouseSensitivityY;
@@ -80,8 +90,6 @@ public class PlayerHandle : IUserInput
         {
             targetDright = targetDup = 0.0f;//清空输入
         }
-
-
         //使用平滑达到目标速度，时间0.2s可变
         Dup = Mathf.SmoothDamp(Dup, targetDup,ref velocityDup, 0.2f);
         Dright = Mathf.SmoothDamp(Dright, targetDright, ref velocityDright, 0.2f);
@@ -95,7 +103,7 @@ public class PlayerHandle : IUserInput
         attack = KeyC.OnPressed;
         defence = KeyD.IsPressing;
         counterBack = Btn1.OnPressed;
-        action = Btn2.OnPressed;
+        action = Btn1.OnPressed;
         //
     }
 }

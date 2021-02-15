@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Item
 {
@@ -13,6 +12,6 @@ public class Item
     }
     public ItemType itemType;
     public int itemId;
-    public Sprite sprite; 
-
+    public Sprite sprite;
+    public float duarable;
 }

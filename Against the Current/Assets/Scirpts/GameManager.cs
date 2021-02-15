@@ -8,12 +8,14 @@ public class GameManager : MonoBehaviour
     public static JsonData apJD = new JsonData();//账号密码
     public LoginManager lm;
     public BagPanel bp;
-    private static GameManager GM;
+    public static GameManager GM;
     private static Queue<JsonData> queue=new Queue<JsonData>();
     public WeaponManager tempwm;
-    private GameObject prefab;
     private DataBase weaponDB;
     private WeaponFactory weaponFactory;
+    public GameObject bag;
+    //private GameObject prefab;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -33,7 +35,8 @@ public class GameManager : MonoBehaviour
     {
         InitDataBase();
         InitWeaponFactory();
-        prefab = Resources.Load("sword") as GameObject;
+        //prefab = Resources.Load("sword") as GameObject;
+
         //print(weaponDB.weaponDataBase);
         //GameObject a=weaponFactory.CreateWeapon("sword",transform.position,Quaternion.identity);
        // GameObject aa = weaponFactory.CreateWeapon("sword",tempwm);
@@ -46,21 +49,25 @@ public class GameManager : MonoBehaviour
     {
         if (queue.Count > 0)
             ReadMessage();
-        if(Input.GetKeyDown(KeyCode.T))
-        {
-            Time.timeScale = 0.2f;
-        }
-        if (Input.GetKeyDown(KeyCode.Y))
-        {
-            Time.timeScale =1f;
-        }
     }
 
 
-    public static void BindBP(BagPanel bp)
+    public  void BindBP(BagPanel bp)
     {
         GM.bp = bp;
+    } 
+    public  void BindBag(GameObject _bag)
+    {
+        GM.bag = _bag;
     }
+
+    public void BindWM(WeaponManager wm)
+    {
+        GM.tempwm = wm;
+    }
+
+
+
     //发送json消息到服务端
     public static void SendMessages(JsonData _jd)
     {
@@ -131,7 +138,7 @@ public class GameManager : MonoBehaviour
             ;
             return -1;
     }
-
+    //更换场景
     public static void ChangeScene(int a)
     {
         SceneManager.LoadScene(a);
@@ -139,14 +146,27 @@ public class GameManager : MonoBehaviour
 
 
 
+    public void AddWeapon(int id)
+    {
+        switch (id)
+        {
+            case 1:
+                tempwm.DownWeapon();
+                Collider col = weaponFactory.CreateWeapon("shielda", tempwm);//col没用，如果更新不输入
+                tempwm.UpdateCollider();
+                break;
+            case 2: 
+                tempwm.DownWeapon();
+                Collider col2 = weaponFactory.CreateWeapon("shieldb", tempwm);//col没用，如果更新不输入
+                tempwm.UpdateCollider();
+                break;
+            case 3://卸下装备
+                tempwm.DownWeapon();
+                break;
+    }
+    }
 
-
-
-
-
-
-
-
+    /*
     private void OnGUI()//不是游戏用UI，只是工程用
     {
         if(GUI.Button(new Rect(10,10,150,30),"sword"))
@@ -166,7 +186,7 @@ public class GameManager : MonoBehaviour
             tempwm.DownWeapon();
         }
     }
-
+    *///Ongui的调用武器
     //初始化
     void InitDataBase()
     {
