@@ -47,11 +47,6 @@ public class PlayerHandle : IUserInput
     //private bool lastjump;
     //private bool lastattack;
     // Update is called once per frame
-
-    private void Awake()
-    {
-        
-    }
     void Update()
     { 
         KeyA.Tick(Input.GetKey(keyA));
@@ -100,10 +95,10 @@ public class PlayerHandle : IUserInput
         //改用类,一行代码,虽然down up 也可以
         run = KeyA.IsPressing;
         jump = KeyB.OnPressed;
-        attack = KeyC.OnPressed;
+        attack = KeyC.OnPressed&&(!Cursor.visible);
         defence = KeyD.IsPressing;
         counterBack = Btn1.OnPressed;
-        action = Btn1.OnPressed;
+        action = Btn1.OnPressed||Input.GetKeyDown(KeyCode.Return);
         //
     }
 }

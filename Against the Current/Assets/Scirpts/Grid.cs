@@ -78,7 +78,9 @@ public class Grid : MonoBehaviour,IPointerDownHandler,IPointerEnterHandler,IPoin
     }
     public int GetItemID()
     {
+        //if(item!=null)
         return item.itemId;
+        //return -1;
     }
     public void SetImageSprite()
     {
@@ -110,16 +112,23 @@ public class Grid : MonoBehaviour,IPointerDownHandler,IPointerEnterHandler,IPoin
             {
                 count = 0;
                 image.sprite = null;
-                item = null;
+                Debug.Log("item not clear null");
+                //item = null;
                 image.gameObject.SetActive(false);
                 textCount.gameObject.SetActive(false);
                 return false;
             }
-            count -= 1;
+            else
+            {
+                count -= 1;
+                if (count > 0)
+                    textCount.text = count.ToString();
+            }
             if(count<=0)
             {
                 image.sprite = null;
-                item = null;
+                Debug.Log("item not clear null");
+                //item = null;
                 image.gameObject.SetActive(false);
                 textCount.gameObject.SetActive(false);
                 return false;
@@ -133,6 +142,7 @@ public class Grid : MonoBehaviour,IPointerDownHandler,IPointerEnterHandler,IPoin
     {
         count=_grid.GetCount();
         item=_grid.GetItem();
+        item.itemId = _grid.GetItemID();
         image.gameObject.SetActive(true);
         SetImageSprite();//更换图片
     }
@@ -151,28 +161,42 @@ public class Grid : MonoBehaviour,IPointerDownHandler,IPointerEnterHandler,IPoin
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        if (Input.GetMouseButtonDown(1))
+        if (gameObject.tag != "npcui")
         {
-            if (count <= 0)
-                return;
-            Debug.Log(count);
-            ItemPanel.itemP.gameObject.SetActive(true);
-            ItemPanel.itemP.grid = this;
-            ItemPanel.itemP.transform.position=new Vector3(Input.mousePosition.x+80,Input.mousePosition.y,0);
+            if (Input.GetMouseButtonDown(1))
+            {
+                if (count <= 0)
+                    return;
+                Debug.Log(count);
+                ItemPanel.itemP.gameObject.SetActive(true);
+                ItemPanel.itemP.grid = this;
+                ItemPanel.itemP.transform.position = new Vector3(Input.mousePosition.x + 80, Input.mousePosition.y, 0);
+            }
+        }
+        else
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                transform.parent.parent.SendMessage("GetItem", item);
+            }
         }
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
         this.image.color= new Color(255, 20, 0, 1);
-        if (count >= 1 && item != null)
-            transform.parent.parent.SendMessage("DisplayTip",item.itemId);
-        else
-            transform.parent.parent.SendMessage("DisplayTip",-1);
+        //描述物品信息,可扩展性太低
+        if (gameObject.tag != "npcui")
+        {
+            if (count >= 1 && item != null)
+                transform.parent.parent.SendMessage("DisplayTip", item.itemId);
+            else
+                transform.parent.parent.SendMessage("DisplayTip", -1);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        this.image.color = new Color(255,255,255, 1);    
+        this.image.color = new Color(255,255,255, 1);
     }
 }

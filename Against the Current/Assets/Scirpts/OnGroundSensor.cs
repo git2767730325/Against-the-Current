@@ -20,11 +20,16 @@ public class OnGroundSensor : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        pointBottom = transform.position + Vector3.up * (radius-0.2f);
+        if (transform.parent.gameObject.tag == "Player")
+            pointBottom = transform.position + Vector3.up * (radius - 0.2f);
+        else
+            pointBottom = transform.position + Vector3.up * (radius - 0.2f);
         pointUpper = transform.position + Vector3.up * (-radius+capcol.height);
         cols = Physics.OverlapCapsule(pointBottom, pointUpper, radius, LayerMask.GetMask("Ground"));
         if (cols.Length > 0)
         {
+            //if (transform.parent.gameObject.tag != "Player")
+                //Debug.Log(radius+" "+ pointBottom+" "+pointUpper);
             SendMessageUpwards("IsGround");
         }
         else

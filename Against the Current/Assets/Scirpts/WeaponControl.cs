@@ -12,7 +12,10 @@ public class WeaponControl : MonoBehaviour
     }
     public float GetATK()
     {
-        return wd.ATK;
+        if(wd!=null)
+            return wd.ATK;
+        Debug.Log("null");
+        return 0;
     }
     //public float GetDurable()
     //{

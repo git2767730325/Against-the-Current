@@ -19,9 +19,4 @@ public class DummyHandle : IUserInput
         // }
     }
 
-    private void Update()
-    {
-        //GoMove(Dright,Dup);
-    }
-
 }

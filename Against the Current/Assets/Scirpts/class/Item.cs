@@ -13,5 +13,6 @@ public class Item
     public ItemType itemType;
     public int itemId;
     public Sprite sprite;
-    public float duarable;
+    public int itemPrice=0;
+    //public float duarable;
 }

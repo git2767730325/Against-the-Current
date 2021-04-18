@@ -83,7 +83,7 @@ public abstract class IUserInput : MonoBehaviour
     [Header("====== DoubleTrigger  ======")]
     public bool lockOn = false;
 
-    [Header("Mouse")]
+    [Header("Mouse启用，以及灵敏度")]
     public bool mouseEnable;
     public float mouseSensitivityX;
     public float mouseSensitivityY;

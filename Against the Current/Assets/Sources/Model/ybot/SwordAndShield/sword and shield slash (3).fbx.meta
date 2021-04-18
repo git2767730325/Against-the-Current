@@ -449,7 +449,7 @@ ModelImporter:
       name: attack2
       takeName: mixamo.com
       internalID: 0
-      firstFrame: 16
+      firstFrame: 7
       lastFrame: 50
       wrapMode: 0
       orientationOffsetY: 0
@@ -470,14 +470,14 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.16218677
+      - time: 0.31690374
         functionName: WeaponEnable
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
-      - time: 0.44858402
+      - time: 0.5919802
         functionName: WeaponDisable
         data: 
         objectReferenceParameter: {instanceID: 0}

@@ -29,6 +29,18 @@ public class StateManager : IActorManagerInterface
     public bool isBlocked;
     public bool isInGun;
     public bool isFlip;
+    public bool isResume;
+    [Header("时光倒流所需状态")]
+    //枪
+    public bool isShot;
+    public bool isReload;
+    public bool isGunIdle;
+    public bool isEmpty;
+    //第0层
+    public bool isNLAttack1;
+    public bool isNLAttack2;
+    public bool isNLAttack3;
+
     [Header("Second state flag")]
     public bool isRun;
     public bool isAllowDefence;
@@ -36,6 +48,7 @@ public class StateManager : IActorManagerInterface
     public bool isStunned;
     public bool isCounterBack;
     public bool isWindy;
+    public bool isBreakShield;
     [Header("======  actorBool  =======")]
     public bool canCounterBack = true;
     public bool canWindy = true;
@@ -66,9 +79,17 @@ public class StateManager : IActorManagerInterface
         isStunned = am.ac.CheckAnimatorState("stunned");
         isCounterBack = am.ac.CheckAnimatorState("counterback")&&canCounterBack;
         isFlip = am.ac.CheckAnimatorState("flip");
+        isResume = am.ac.CheckAnimatorState("resurrection");
         //在持枪下
         isInGun = am.ac.CheckAnimatorTag("gun","Gun");
-
+        isGunIdle = am.ac.CheckAnimatorState("gunidle", "Gun");
+        isShot = am.ac.CheckAnimatorState("shot", "Gun");
+        isReload = am.ac.CheckAnimatorState("reload", "Gun");
+        isEmpty = am.ac.CheckAnimatorState("empty","Gun");
+        //逆态
+        isNLAttack1 = am.ac.CheckAnimatorState("attack1hA");
+        isNLAttack2 = am.ac.CheckAnimatorState("attack1hB");
+        isNLAttack3 = am.ac.CheckAnimatorState("attack1hC");
         //疾风突袭
         isWindy = am.ac.CheckAnimatorTag("windy");
 
@@ -94,6 +115,14 @@ public class StateManager : IActorManagerInterface
         {
             weaponPower = weaponMaxPower;
             canReloadWP = false;
+        }
+        //破盾
+        if(gameObject.tag=="Player")
+        {
+            if (am.ac.CheckAnimatorState("breakstunned"))
+                isBreakShield = true;
+            else
+                isBreakShield = false;
         }
     }
 

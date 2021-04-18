@@ -14,8 +14,13 @@ public class WeaponManager : IActorManagerInterface
     [Header("======= 频繁切换的武器  =======")]
     public GameObject gun;
     public GameObject sword;
-    public SwordVFX svfx;
+    public GameObject lightSword;
     public GameObject vfxTarget;
+    [Header("bool，避免频繁切换武器")]
+    public bool gunState = false;
+    public bool nlState = false;
+    [Header("=======    需要对象池的特效      ==========")]
+    public SwordVFX svfx;
     private void Awake()
     {
         weaponHandleRight = transform.DeepFind("rightweapon").gameObject;
@@ -44,9 +49,14 @@ public class WeaponManager : IActorManagerInterface
     //特效对象池
     public void OpenSwordVFX()
     {
-        GameObject obj = svfx.DeQueue();
-        obj.transform.position = vfxTarget.transform.position;
-        obj.transform.rotation = vfxTarget.transform.rotation;
+        if (transform.parent.gameObject.tag == "Player")
+        {
+            AudioManager.SetPlayerSource(4);
+            AudioManager.PlayPlayeraudioSource();
+            GameObject obj = svfx.UseTimePool();
+            obj.transform.position = vfxTarget.transform.position;
+            obj.transform.rotation = vfxTarget.transform.rotation;
+        }
     }
 
 
@@ -76,22 +86,35 @@ public class WeaponManager : IActorManagerInterface
 
     public void ChangeWeapon(bool isGun)
     {
-        if(isGun)
+        //过于频繁
+        if(isGun&&!gunState)
         {
             wcR.wd.gameObject.SetActive(false);
             wcR.wd = gun.GetComponent<WeaponData>();
             wcR.wd.gameObject.SetActive(true);
+            gunState = true;
+            nlState = false;
         }
-        else
+        else if(!isGun&&!nlState)
         {
             wcR.wd.gameObject.SetActive(false);
             wcR.wd = sword.GetComponent<WeaponData>();
             wcR.wd.gameObject.SetActive(true);
+            nlState = true;
+            gunState = false;
         }
     }
 
 
-
+    //脚步声音相关
+    public void AudioMove()
+    {
+        if (transform.parent.gameObject.tag != "Player")
+            return;
+            Debug.Log("声音");
+        AudioManager.SetPlayerSource(0);
+        AudioManager.PlayPlayeraudioSource();
+    }
 
     public void WindyEnable()
     {
@@ -123,4 +146,24 @@ public class WeaponManager : IActorManagerInterface
         weaponColR.enabled = false;
        // weaponCol.isTrigger = false;
     }
+
+    //更换光剑
+    public void PreDoomOath()
+    {
+        if (lightSword == null)
+            return;
+        Time.timeScale = 0.25f;
+    }
+    public void DoomOath()
+    {
+        if (lightSword == null)
+            return;
+        Time.timeScale = 1f;
+        if (lightSword == null)
+            return;
+        wcR.wd.gameObject.SetActive(false);
+        wcR.wd = lightSword.GetComponent<WeaponData>();
+        wcR.wd.gameObject.SetActive(true);
+    }
+
 }

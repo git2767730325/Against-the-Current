@@ -9,6 +9,11 @@ TagManager:
   - GM
   - partol
   - bullet
+  - uim
+  - npcui
+  - BOSS
+  - Separation
+  - bullets
   layers:
   - Default
   - TransparentFX
@@ -26,7 +31,7 @@ TagManager:
   - caster
   - processing
   - sight
-  - 
+  - camera
   - 
   - 
   - 

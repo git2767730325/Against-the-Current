@@ -6,10 +6,15 @@ public class PickItem : MonoBehaviour
 {
     public UIManager uim;
     public int itemID;
-    
+    public int minID;
+    public int maxID;
+    private void Awake()
+    {
+        uim = GameObject.FindWithTag("uim").GetComponent<UIManager>();
+    }
     private void OnEnable()
     {
-        itemID = Random.Range(39, 50);
+        itemID = Random.Range(minID, maxID);
     }
     public void SetFalse()
     {

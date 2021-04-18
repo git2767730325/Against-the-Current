@@ -45,6 +45,7 @@ public class EquipScene : MonoBehaviour
         JsonData jd = new JsonData();
         jd["function"] = 9;
         jd["account"] = GameManager.apJD["account"];
+        jd["passwords"] = GameManager.apJD["passwords"];
         GameManager.SendMessages(jd);
         Client.CloseThread();
     }

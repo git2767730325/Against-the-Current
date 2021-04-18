@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class ActorController : MonoBehaviour
 {
+    public bool canUseGun = true;
+    public minimap mini;
     public float blong;
     public ActorController nlAC;//更换状态控制器
     //public ActorController zzAC;//更换状态控制器
@@ -18,6 +20,11 @@ public class ActorController : MonoBehaviour
     public float rollSpeed;
     public float jabSpeed;
     private MyTimer stunnedBackTime=new MyTimer();
+    [Header("=======      武器拖尾,手动拖,枪的存在      =========")]
+    public GameObject trail;
+    //public GameObject gun;
+    [Header("===== 需要对象池，暂时手动获取  =====")]
+    public Bullets bl;//子弹对象池
     [Header("=====  判断斜坡角度  ======")]
     public Vector3 foot;
     public Vector3 body;
@@ -27,15 +34,15 @@ public class ActorController : MonoBehaviour
     public bool isSlope = false;
     public bool isCanClimb = false;
     public bool isCanTop = false;
-    public float lonag=1.5f;
-    public float headlong = 5f;
+    public float lonag=0.5f;
+    public float headlong = 1f;
+    public Vector3 targetClimbTop;
     [Header("======== friction =======")]
     public PhysicMaterial f0;
     public PhysicMaterial f1;
-
-
-    [SerializeField]
+    [Header("无需设置")]
     public Animator anim;
+    [Space(10)]
     private Rigidbody rig;
     private Vector3 moveVec;
     private Vector3 thrustVec;
@@ -49,13 +56,32 @@ public class ActorController : MonoBehaviour
     public bool isBulletTime = false;
     public bool isRun = false;
     public bool isCrouch = false;
+    [Header("子弹生成点，枪位置看点，恢复位置的物体，是否为AI")]
     public GameObject bulletPoint;//子弹生成点
+    [Header("看到点")]
     public GameObject gunLook;//看点的物体
+    [Header("和上面一个是同一个物体，这个设置对应位置角度")]
+    public GameObject rightPos;
     //public GameObject prefabBullet;
-    public Bullets bl;//子弹对象池
     public bool isAI = false;
     private bool isLock = false;
-
+    [Header("==========      时光倒流相关设置      ===============")]
+    //敌人和分身共用
+    public string actPlaying;
+    public int actLayer;
+    //分身用
+    public string gunActPlaying;
+    //
+    public Vector3 modelRot;
+    public Vector3 objRot;
+    //模型的走路
+    public float forwardValue;
+    public float rightValue;
+    //枪的位置修正
+    public Vector3 gunFixPos;
+    //public float sppea=1;
+    //public bool sdsaf;
+    //public AnimatorRecorderMode ar;
     //事件
     public delegate void OnActionDelegate();
     public event OnActionDelegate OnAction;
@@ -63,6 +89,7 @@ public class ActorController : MonoBehaviour
     // Start is called before the first frame update
     private void Awake()
     {
+        mini = transform.GetComponentInChildren<minimap>();
         am = GetComponent<ActorManager>();
         IUserInput[] inputType = GetComponents<IUserInput>();
         //多套控制方式
@@ -77,50 +104,98 @@ public class ActorController : MonoBehaviour
         anim = model.GetComponent<Animator>();
         rig = gameObject.GetComponent<Rigidbody>();
         stunnedBackTime = new MyTimer();
+        if (gameObject.tag == "Separation")
+        {
+            bl = GameObject.FindWithTag("bullets").GetComponent<Bullets>();
+            Debug.Log("如果对象池没有标签将会报错");
+        }
+    }
+    private void Start()
+    {
+        if (tag == "Player")
+        {
+            AudioManager.SetBackGroundClip(1);
+            AudioManager.PlayBackGroundSource();
+        }
+        GameManager.GM.player = this.gameObject;
     }
     // Update is called once per frame
     void Update()
     {
-        if(isAI)
+        modelRot = model.transform.eulerAngles;
+        forwardValue = anim.GetFloat("forward");
+        rightValue = anim.GetFloat("right");
+        if (isAI)
         {
             return;
         }//AI则返回，AI自己有控制逻辑
-
+        //地图放大缩小
+        if(mini!=null)
+        {
+            mini.SetMiniMapSize(15+rig.velocity.magnitude*3);
+        }
+        /*
+        if(Input.GetKeyDown(KeyCode.X))
+        {
+            anim.Play("Move",0,0.7f);
+            anim.SetFloat("back",-2f);
+        }*/
 
         //武器切换
         if (nlState)
         {
-            anim.SetBool("isgun", gunState);
+            if (canUseGun)
+            {
+                anim.SetBool("isgun", gunState);
+            }
+            else
+                gunState = false;
+            if(!gunState&&rightPos.transform.localEulerAngles!=Vector3.zero)
+            {
+                rightPos.transform.localEulerAngles = Vector3.zero;
+            }
             //切换武器
             am.wm.ChangeWeapon(gunState);
         }
         //切换战斗状态
         else
         {
+            if(am.sm.isGround)
             anim.SetBool("battle", battleState);
             Debug.Log("battle");
         }
         //爬山状态监测
         TestClimbing();
-        //爬山，爬山就返回return 
+        //爬山，爬山就返回return ,用函数内就不会返回
         //小心！！！！
+
         Climb();
+        if (CheckAnimatorState("climb"))
+            return;
         //模式切换,非锁定下才能切换
         if (!camcontrol.lockState && playH.Btn4.OnPressed && !gunState&&CheckAnimatorState("Move"))
         {
             if (!nlState)
             {
                 anim.runtimeAnimatorController = nlRAC;
+                anim.SetBool("isground",true);
+                anim.Play("Move");
                 am.wm.wcR.wd.gameObject.SetActive(true);
                 if(am.wm.wcL.wd!=null)
                 am.wm.wcL.wd.gameObject.SetActive(false);
             }
             else
             {
-                anim.runtimeAnimatorController = zzRAC;
-                //武器切换
-                if (am.wm.wcR.wd.gameObject.activeSelf)
-                    am.wm.wcR.wd.gameObject.SetActive(false);
+                if (!playH.KeyD.IsPressing)
+                {
+
+                    anim.runtimeAnimatorController = zzRAC;
+                    //武器切换
+                    if (am.wm.wcR.wd.gameObject.activeSelf)
+                        am.wm.wcR.wd.gameObject.SetActive(false);
+                }
+                else
+                    nlState = !nlState;
             }
             nlState = !nlState;
         }
@@ -128,6 +203,9 @@ public class ActorController : MonoBehaviour
         if (playH.Btn3.OnPressed&& !camcontrol.lockState &&nlState)//切换枪态
         {
             gunState = !gunState;
+            if (!canUseGun)
+                return;
+            Debug.LogError("配置枪");
             am.wm.ChangeWeapon(gunState);
         }
         //走路跑步过渡平滑,两种移动，锁死视角和解锁
@@ -181,23 +259,33 @@ public class ActorController : MonoBehaviour
                         anim.SetFloat("right", 0);
                     }//避免一直卡动画
                 }
-                else//逆态，新动画控制器？
+                else//逆态，新动画控制器
                 {
-                    if (playH.Dmo > 0.1f)
+                    //如果是玩家才有后续
+                    if (gameObject.tag == "Player")
                     {
-                        anim.SetFloat("forward", playH.Dmo * Mathf.Lerp(anim.GetFloat("forward"), 2.0f, 0.5f));//lerp第一个参数不用playH.Dmo,不然会突变
-                        anim.SetFloat("right", 0);
-                        Vector3 targetForward = Vector3.Slerp(anim.transform.forward, playH.Dvec, 0.3f);
-                        anim.transform.forward = targetForward;
-                    }
-                    else if (playH.inputEnable)
-                    {
-                        anim.SetFloat("forward", playH.Dmo * Mathf.Lerp(anim.GetFloat("forward"), (playH.run ? 2.0f : 1.0f), 0.5f));//lerp第一个参数不用playH.Dmo,不然会突变
-                        anim.SetFloat("right", 0);
-                    }//避免一直卡动画
-                    if(playH.inputEnable&&playH.KeyA.OnPressed)
-                    {
-                        anim.SetTrigger("roll");
+                        //拖尾特效
+                        if (trail != null)
+                            if (gameObject.tag == "Player" && trail.activeSelf != am.sm.isAttack)
+                            {
+                                trail.SetActive(am.sm.isAttack);
+                            }
+                        if (playH.Dmo > 0.1f)
+                        {
+                            anim.SetFloat("forward", playH.Dmo * Mathf.Lerp(anim.GetFloat("forward"), 2.0f, 0.5f));//lerp第一个参数不用playH.Dmo,不然会突变
+                            anim.SetFloat("right", 0);
+                            Vector3 targetForward = Vector3.Slerp(anim.transform.forward, playH.Dvec, 0.3f);
+                            anim.transform.forward = targetForward;
+                        }
+                        else if (playH.inputEnable)
+                        {
+                            anim.SetFloat("forward", playH.Dmo * Mathf.Lerp(anim.GetFloat("forward"), (playH.run ? 2.0f : 1.0f), 0.5f));//lerp第一个参数不用playH.Dmo,不然会突变
+                            anim.SetFloat("right", 0);
+                        }//避免一直卡动画
+                        if (playH.inputEnable && playH.KeyA.OnPressed)
+                        {
+                            anim.SetTrigger("roll");
+                        }
                     }
                 }
             }
@@ -264,6 +352,7 @@ public class ActorController : MonoBehaviour
             if (playH.Btn2.OnPressed && am.sm.ammo < 30)
             {
                 anim.SetBool("reload", true);
+                AudioManager.SetAndPlayVfxSource(1);
             }
             //Vector3 temp;
             model.transform.forward = transform.forward;
@@ -318,7 +407,7 @@ public class ActorController : MonoBehaviour
         Crounch();
         //
         //复活
-        if(playH.Btn6.OnPressed&&CheckAnimatorState("die"))
+        if(camcontrol.uim.resurrection.activeSelf&&playH.Btn6.OnPressed&&am.sm.isDie)
         {
             anim.SetTrigger("resurrection");
             resurrectionObj.SetActive(true);
@@ -331,8 +420,6 @@ public class ActorController : MonoBehaviour
             Debug.Log("invoke");
         }
         //
-
-
     }
 
     private void FixedUpdate()
@@ -351,15 +438,20 @@ public class ActorController : MonoBehaviour
         {
             rig.velocity = moveVec;
         }
-        //若果到顶了，给一定的速度
+        //若果到顶了，给一定的速度,直接给位移更好
         if (CheckAnimatorState("climbtop"))
         {
-            rig.velocity += new Vector3(0, 0.2f, 0f);
+            rig.velocity = Vector3.zero;
+            if (targetClimbTop.y >= transform.position.y)
+            {
+                //transform.position += model.transform.forward * 0.01f;
+                transform.position += model.transform.up * 0.05f;
+            }
+            //rig.velocity += new Vector3(0, 0.2f, 0f);
         }
         
         //冲量重置，避免力用两次！！！！！！！！！！！！！
         thrustVec = Vector3.zero;
-        if(gunState)
         AimingCorrection(); //枪的位置视角矫正
     }
 
@@ -378,7 +470,7 @@ public class ActorController : MonoBehaviour
     //速度足够时，触发翻滚
     public void QuickToRoll()
     {
-        if (rig.velocity.magnitude > 5f)
+        if (rig.velocity.magnitude > 10f)
         {
             if (!gunState)
                 anim.SetTrigger("roll");
@@ -417,34 +509,43 @@ public class ActorController : MonoBehaviour
                 am.wm.ChangeWeapon(gunState);
             }
         }
-        else if (playH.attack && canAttack)
-            {
+        else if (playH.attack && canAttack&&!am.sm.isDie)
+        {
             if (gunState)
             {//添加非上子弹的情况
                 if (am.sm.ammo >= 1 && CheckAnimatorState("gunidle", "Gun"))
                 {
                     am.sm.ammo -= 1;
                     anim.SetTrigger("shot");
-                    GameObject bullet_obj = bl.DeQueue();
+                    //开火
+                    AudioManager.SetAndPlayVfxSource(0);
+                    GameObject bullet_obj = bl.UseTimePool();
                     bullet_obj.transform.position = bulletPoint.transform.position;
                     bullet_obj.transform.rotation = bulletPoint.transform.rotation;
                     Rigidbody bullet = bullet_obj.GetComponent<Rigidbody>();
-                if (bullet.transform.parent != null)
-                {
-                        bullet.velocity = bulletPoint.transform.up * 25f;
+                    if (bullet.transform.parent != null)
+                    {
+                        bullet.velocity = bulletPoint.transform.up * 50f;
+                    }
+                    if (am.sm.ammo == 0)
+                    {
+                        //上子弹
+                        AudioManager.SetAndPlayVfxSource(1);
+                        anim.SetBool("reload", true);
+                    }
+                    return;//不进行近战攻击
                 }
-                if (am.sm.ammo == 0)
-                    anim.SetBool("reload", true);
-                return;//不进行近战攻击
+                else
+                {
+                    //
+                    //上子弹
+                    //AudioManager.SetAndPlayVfxSource(1);
+                    //anim.SetBool("reload", true);
+                    return;
+                }
             }
             else
-            {
-                //
-                //上子弹
-                return;
-            }
-        }
-        anim.SetTrigger("attack");
+                anim.SetTrigger("attack");
     }
     }
 
@@ -483,13 +584,21 @@ public class ActorController : MonoBehaviour
             anim.SetBool("climb", isCanClimb && isSlope);
             if (isCanClimb && isSlope)
             {
-                OnExitBattle();
-                battleState = false;
-                anim.SetBool("battle", battleState);
+                if (battleState)
+                {
+                    battleState = false;
+                    OnExitBattle();
+                }
                 isRun = false;
+                anim.SetBool("battle", battleState);
+                    //playH.Dup = -playH.Dup;
                 anim.SetFloat("up", playH.Dup);
                 anim.SetFloat("right", playH.Dright);
-                moveVec = model.transform.up * 1f * playH.Dup + model.transform.forward * 0.4f * playH.Dup
+                if (Mathf.Abs(transform.eulerAngles.y - model.transform.eulerAngles.y) > 90)
+                moveVec = model.transform.up * -1f * playH.Dup + model.transform.forward * -0.4f * playH.Dup
+                    + model.transform.right * 1f * playH.Dright;
+                else
+                    moveVec = model.transform.up * 1f * playH.Dup + model.transform.forward * 0.4f * playH.Dup
                     + model.transform.right * 1f * playH.Dright;
                 return;
             }
@@ -534,8 +643,11 @@ public class ActorController : MonoBehaviour
         else
         {
             playH.defence = false;//避免无法取消举盾
-            anim.SetBool("defense", playH.defence);
-            SetLayerWeight("defense", 0f);
+            if (!gunState && !nlState)
+            {
+                anim.SetBool("defense", playH.defence);
+                SetLayerWeight("defense", 0f);
+            }
         }
     }
 
@@ -557,8 +669,12 @@ public class ActorController : MonoBehaviour
             }
         }
     }
+
+    //分身也要
     public void AimingCorrection()
     {
+        if (gameObject.tag == "Separation")
+            return;
         //枪的位置视角矫正,如果在枪态，并且枪矫正的物体不为空
         if (gunLook != null && gunState)
         {
@@ -572,6 +688,8 @@ public class ActorController : MonoBehaviour
             }
             else
                 gunLook.transform.LookAt(Camera.main.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, 50)));
+            gunFixPos =gunLook.transform.eulerAngles;
+
         }
     }
 
@@ -596,7 +714,10 @@ public class ActorController : MonoBehaviour
     }
     public void OnExitReload()
     {
-        ReloadEnd();
+        if(gunState)
+            ReloadEnd();
+        else
+            AudioManager.StopVfxAudioSource();
     }
     public void OnEnterShot()
     {
@@ -669,7 +790,8 @@ public class ActorController : MonoBehaviour
     }
     public void OnEnterWindy()
     {
-        canAttack = true;
+        model.transform.forward = transform.forward;
+        //canAttack = true;
     }
     public void OnEnterFlip()
     {
@@ -677,15 +799,11 @@ public class ActorController : MonoBehaviour
         playH.inputEnable = false;
         thrustVec = new Vector3(0, 0, model.transform.forward.z * -15);
     }
-    public void OnEnterAttack1hC()
+    public void OnStayWindy()
     {
-
+        thrustVec = new Vector3(0, 0, model.transform.forward.z * 5f);
     }
 
-    public void OnExitAttack1hC()
-    {
-
-    }
 
     public void OnEnterHit()
     {
@@ -697,7 +815,7 @@ public class ActorController : MonoBehaviour
         playH.inputEnable = false;
         isLock = true;
         //碰撞体去掉
-        if(gameObject.name!="Player")
+        if(gameObject.tag!="Player"&&gameObject.tag!="Separation")
         {
             CapsuleCollider cp = GetComponent<CapsuleCollider>();
             cp.enabled = false;
@@ -707,21 +825,46 @@ public class ActorController : MonoBehaviour
     {
         //武器盾牌等设置为装备
         //am检查装备的物品，如果没有盾牌的话不启用盾牌
+        battleState = true;
+        ChangeBool("battle",true);
         am.SetOrCollectWeapon(true);
     }
     public void OnExitBattle()
     {
         //收起武器盾牌，关闭攻击
-        am.SetOrCollectWeapon(false);
+        if (!am.sm.isAttack)
+        {
+            ChangeBool("battle",false);
+            battleState = false;
+            am.SetOrCollectWeapon(false);
+        }
+        else
+        {
+            ChangeBool("battle", true);
+            battleState = true;
+            am.SetOrCollectWeapon(true);
+            Debug.Log("失败了"+battleState+"aa"+anim.GetBool("battle"));
+        }
     }
     //切换武器
     public void OnEnterGunWeapon()
     {
-        //如果是没有枪才做
+        //如果是没有枪才做，分身做
+
+        gunState = true;
+        anim.SetBool("isgun", gunState);
+        am.wm.ChangeWeapon(true);
+
     }
     public void OnExitGunWeapon()
     {
-
+        gunState = false;
+        anim.SetBool("isgun", gunState);
+        am.wm.ChangeWeapon(false);
+        if (rightPos.transform.localEulerAngles != Vector3.zero)
+        {
+            rightPos.transform.localEulerAngles = Vector3.zero;
+        }
     }
     public void OnEnterBlocked()
     {
@@ -732,11 +875,6 @@ public class ActorController : MonoBehaviour
         //被打时关闭自己的武器攻击，或者 改到攻击动画跳出关闭武器碰撞体
         am.HitCloseWeapon(); 
     }
-    public void OnEnterClimb()
-    {
-        playH.inputEnable = true;
-    }
-
     public void OnEnterLock()
     {
         playH.inputEnable = false;
@@ -749,6 +887,16 @@ public class ActorController : MonoBehaviour
         battleState = true;
     }
 
+    public void OnEnterClimb()
+    {
+        playH.inputEnable = true;
+    }
+    public void OnEnterTop()
+    {
+        playH.inputEnable = false;
+        targetClimbTop=transform.position +model.transform.forward * 0.2f + model.transform.up * 2f;
+        transform.position += model.transform.up * 0.5f;
+    }
 
 
 
@@ -771,20 +919,103 @@ public class ActorController : MonoBehaviour
         anim.SetFloat(floatName,value);
     }
 
+
+
+    //mori
+    public void LongSword()
+    {
+        if(nlState&&!gunState)
+        anim.Play("doomoath");
+    }
+
+    //时光倒流相关
+    public void ChangeActAndPlayBack(string _actName,int _layerNum)
+    {
+        Debug.Log(_actName);
+        bool isS =(gameObject.tag == "Sepataration");
+        anim.SetFloat("back",isS?-2.6f:-2f);
+        if (actPlaying != _actName)
+        {
+            if (gameObject.tag == "Separation")
+            {
+                anim.Play(_actName, _layerNum, 0.7f);
+            }
+            else if (gameObject.tag != "Player")
+            {
+                anim.Play(_actName, _layerNum, 0.7f);
+                if (_layerNum == 1)
+                    anim.Play("Move",0,0.7f);
+            }
+        }
+    }
+    public void StopPlayBack()
+    {
+        anim.SetFloat("back", 1f);
+    }
+    public void StopPlayBackS(string _actName, int _layerNum)
+    {
+        if(anim.GetFloat("back")!=1f)
+            anim.SetFloat("back", 1f);
+        if (actPlaying!= _actName)
+        {
+            anim.Play(_actName, _layerNum,0.1f);
+            if(_actName=="shot")
+            {
+                GameObject bullet_obj = bl.UseTimePool();
+                bullet_obj.transform.position = bulletPoint.transform.position;
+                bullet_obj.transform.rotation = bulletPoint.transform.rotation;
+                Rigidbody bullet = bullet_obj.GetComponent<Rigidbody>();
+                if (bullet.transform.parent != null)
+                {
+                    bullet.velocity = bulletPoint.transform.up * 50f;
+                    Debug.Log("子弹生成，并且优速贷");
+                }
+            }
+            Debug.Log(actPlaying+"   "+_actName);
+        }
+    }
+
     public bool CheckAnimatorState(string stateName,string layerName="Base Layer")
     {
         int index=anim.GetLayerIndex(layerName);
+        if (index == -1)
+            return false;
         bool stateValue=anim.GetCurrentAnimatorStateInfo(index).IsName(stateName);
+        if (stateValue)
+        {
+            //如果是玩家，需要判断第二层的状态来传参数
+            //逻辑太慌乱了
+            actLayer = index;
+            if (actLayer == 0)
+                actPlaying = stateName;
+            else if(actLayer==1)
+                gunActPlaying= stateName;
+            if (gameObject.tag == "Player"||gameObject.tag=="Separation")
+            {
+                if (gunActPlaying == "empty")
+                {
+                    actLayer = 0;
+                   // Debug.Log(actPlaying+actLayer);
+                }
+                else
+                    actPlaying = gunActPlaying;
+            }
+            else
+                actPlaying = stateName;
+        }
         return stateValue;
     }
 
     public bool CheckAnimatorTag(string tagName, string layerName = "Base Layer")//看动画里的标签
     {
         int index = anim.GetLayerIndex(layerName);
+        if (index == -1)
+            return false;
         bool stateValue = anim.GetCurrentAnimatorStateInfo(index).IsTag(tagName);
         return stateValue;
     }
     
+
     //动画自身的移动量，无需调用，放入函数里使用
     public void OnUpdateRootMotion(object _deltaPos)
     {

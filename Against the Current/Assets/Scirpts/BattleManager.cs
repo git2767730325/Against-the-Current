@@ -14,6 +14,8 @@ public class BattleManager : IActorManagerInterface
     {
         //设置防御碰撞体的基本属性
         defcol = transform.GetComponent<CapsuleCollider>();
+        if (gameObject.tag == "BOSS")
+            return;
         defcol.height = 2f;
         defcol.radius = 0.3f;
         //Vector3 tran = transform.position;
@@ -39,7 +41,7 @@ public class BattleManager : IActorManagerInterface
             if (wc != null)//如果有武器挂载点
             {
                 float angle = CheckAngle(wc.wm.gameObject, transform.gameObject, wc.wm.am.ac.model.transform.forward);//判断攻击范围角度
-                if (angle < 80)
+                if (angle <100)
                     am.TryDoDamage(wc);//传出尝试造成伤害的武器（挂载点）
             }
         }

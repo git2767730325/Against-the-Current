@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using LitJson;
 public class LoginManager : MonoBehaviour
 {
@@ -39,17 +38,23 @@ public class LoginManager : MonoBehaviour
         confirmBtn.onClick.AddListener(Register);
         //warning
         closeBtn.onClick.AddListener(CloseWarning);
+        //passwordsL.onValueChanged.AddListener(delegate { InputText(); });
+        passwordsL.onValueChanged.AddListener(InputText);
     }
     private void Start()
     {
         Client.StartThread();
-        //JsonData jd = new JsonData();
-        //jd["function"] = 1;
-        //jd["mode"] = 2;
-        //Client.Send(jd);
     }
+
+    public void ExitGame()
+    {
+        Application.Quit();
+        Debug.Log("要在游戏中才退出");
+    }
+
     public void Login()
     {
+        AudioManager.SetUIClipsAndPlay();
         if (accountL.text.Length > 0 && passwordsL.text.Length > 0)
         {
             //联网判断账号密码
@@ -69,6 +74,7 @@ public class LoginManager : MonoBehaviour
     }
     public void Register()
     {
+        AudioManager.SetUIClipsAndPlay();
         //注册账号密码的长度要大于0
         if (accountR.text.Length > 0 && registerR.text.Length > 0)
         {
@@ -123,7 +129,7 @@ public class LoginManager : MonoBehaviour
         else if (str == "Login success")
         {
             warningText.text = str;
-            GameManager.ChangeScene(1);
+            GameManager.GM.ChangeSceneLoad(7);
         }
         else if (str == "account error")
         {
@@ -156,6 +162,7 @@ public class LoginManager : MonoBehaviour
         passwordsL.text = "";
         login.SetActive(false);
         register.SetActive(true);
+        AudioManager.SetUIClipsAndPlay();
     }
 
     //回到登陆界面
@@ -166,11 +173,20 @@ public class LoginManager : MonoBehaviour
         registerR.text = "";
         login.SetActive(true);
         register.SetActive(false);
+        AudioManager.SetUIClipsAndPlay();
     }
+
+
     public void CloseWarning()
     {
         warning.SetActive(false);
     }
+    public void InputText(string i)//string i不用委托
+    {
+        AudioManager.SetUIClipsAndPlay(1);
+    }
+
+
     //切换到下个场景会破坏连接
     private void OnDestroy()
     {

@@ -9,6 +9,7 @@ public class LeftArmAnimtorFix : MonoBehaviour
     public Vector3 vecFix;
     private Animator anim;
     public Vector3 vecFixpos;
+    [Header("手部持枪修正IK，位置是枪的左手把住的地方")]
     public GameObject gbjP;
     private void Awake()
     {

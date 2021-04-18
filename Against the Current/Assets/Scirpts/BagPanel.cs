@@ -6,7 +6,8 @@ using UnityEngine.UI;
 using LitJson;
 public class BagPanel : MonoBehaviour
 {
-    public int coin = 0;
+
+    public int coin=5000;
     public BagPanel bp;
     public UIManager uim;
     public Button equipmentBtn;
@@ -26,11 +27,18 @@ public class BagPanel : MonoBehaviour
     public Text coinCount;
     //物品信息
     public ItemTipText tips;
+    [Header("=== 价格表 ==")]
+    public TextAsset priceAsset;
+    private String tempText;
+    private List<int> priceList=new List<int>();
     //实例化到字典
     Dictionary<int, Item> itemDic = new Dictionary<int, Item>(); 
     private void Awake()
     {
         bp = this;
+        //if(!GameManager.GM.bp)
+        Debug.LogError("有GM时暂时");
+        //GameManager.GM.bp = this;
         equipmentBtn = bp.transform.Find("equipmentBtn").GetComponent<Button>();
         consumablesBtn = bp.transform.Find("consumablesBtn").GetComponent<Button>();
         materialBtn = bp.transform.Find("materialBtn").GetComponent<Button>();
@@ -43,7 +51,17 @@ public class BagPanel : MonoBehaviour
         arrangeBtn.onClick.AddListener(ArrangeItemBtn);
         lLight=Resources.Load<Sprite>("UI/button");
         hLight=Resources.Load<Sprite>("UI/lightbutton");
-        AddCoin(0);
+        //导入数值
+        tempText = priceAsset.text;
+        string[] sd = tempText.Split('\n');
+        foreach (var s in sd)
+        {
+            int price = 0;
+            price = int.Parse(s);
+            priceList.Add(price);
+        }
+        coinCount.text = coin.ToString();
+        
         //GameManager.GM.BindBP(this);
     }
 
@@ -59,6 +77,7 @@ public class BagPanel : MonoBehaviour
         InitItemDic();
         EquipBtnCall();
         InitGrid();
+        this.gameObject.SetActive(false);
     }
     void EquipBtnCall()
     {
@@ -120,6 +139,7 @@ public class BagPanel : MonoBehaviour
             item.itemId =_id +i;
             item.itemType= _itemType;
             item.sprite = sprites[i];
+            item.itemPrice = priceList[item.itemId];
             if (!itemDic.ContainsKey(id))
             {
                 itemDic.Add(id, item);
@@ -184,11 +204,18 @@ public class BagPanel : MonoBehaviour
 
     private void ArrangeItemBtn()
     {
+        int itemGrid=-1;
         Grid[] grids = null;
         Grid grid = null;
         //判断，排序
         if(equipPanel.activeSelf)
         {
+            if (uim.tempGrid != null)
+            {
+                itemGrid = uim.tempGrid.GetGridID();
+                if(itemGrid>0)
+                uim.ChangeUseItemPos(null);
+            }
             grids = transform.Find("EquipPanel").GetComponentsInChildren<Grid>();
             for(int i=0;i<grids.Length; i++)
             {
@@ -201,8 +228,29 @@ public class BagPanel : MonoBehaviour
                     if (grids[j].GetCount() > 0)
                     {
                         Debug.Log("aaa"+i);
+                        bool canChange = itemGrid==grids[j].GetGridID();
                         grid.ChangeTo(grids[j]);
+                        JsonData jd = new JsonData();
+                        int iID = grid.GetItemID();
+                        jd["function"] = 2;
+                        jd["mode"] = 1;//添加物品
+                        jd["gridID"] = grid.GetGridID();
+                        jd["count"] = grid.GetCount();
+                        jd["itemID"] = iID;
+                        jd["account"] = GameManager.apJD["account"];//便于服务端管理
+                        GameManager.SendMessages(jd);
+                        jd["function"] = 2;
+                        jd["mode"] = 2;//删除物品
+                        jd["gridID"] = grids[j].GetGridID();
+                        jd["count"] = 0;
+                        jd["itemID"] = grids[j].GetItemID();
+                        jd["account"] = GameManager.apJD["account"];//便于服务端管理
+                        GameManager.SendMessages(jd);
                         grids[j].ChangeToEmpty();
+                        if (canChange)
+                        {//如果是负数就不可能if成功
+                            uim.ChangeUseItemPos(grid);
+                        }
                         break;
                     }
                 }
@@ -223,6 +271,22 @@ public class BagPanel : MonoBehaviour
                     {
                         Debug.Log("aaa" + i);
                         grid.ChangeTo(grids[j]);
+                        JsonData jd = new JsonData();
+                        int iID = grid.GetItemID();
+                        jd["function"] = 2;
+                        jd["mode"] = 1;//添加物品
+                        jd["gridID"] = grid.GetGridID();
+                        jd["count"] = grid.GetCount();
+                        jd["itemID"] = iID;
+                        jd["account"] = GameManager.apJD["account"];//便于服务端管理
+                        GameManager.SendMessages(jd);
+                        jd["function"] = 2;
+                        jd["mode"] = 2;//删除物品
+                        jd["gridID"] = grids[j].GetGridID();
+                        jd["count"] = 0;
+                        jd["itemID"] = grids[j].GetItemID();
+                        jd["account"] = GameManager.apJD["account"];//便于服务端管理
+                        GameManager.SendMessages(jd);
                         grid.SetTextActive(true);
                         grids[j].ChangeToEmpty();
                         grids[j].SetTextActive(false);
@@ -247,6 +311,22 @@ public class BagPanel : MonoBehaviour
                         Debug.Log("aaa" + i);
                         grid.ChangeTo(grids[j]);
                         grid.SetTextActive(true);
+                        JsonData jd = new JsonData();
+                        int iID = grid.GetItemID();
+                        jd["function"] = 2;
+                        jd["mode"] = 1;//添加物品
+                        jd["gridID"] = grid.GetGridID();
+                        jd["count"] = grid.GetCount();
+                        jd["itemID"] = iID;
+                        jd["account"] = GameManager.apJD["account"];//便于服务端管理
+                        GameManager.SendMessages(jd);
+                        jd["function"] = 2;
+                        jd["mode"] = 2;//删除物品
+                        jd["gridID"] = grids[j].GetGridID();
+                        jd["count"] = 0;
+                        jd["itemID"] = grids[j].GetItemID();
+                        jd["account"] = GameManager.apJD["account"];//便于服务端管理
+                        GameManager.SendMessages(jd);
                         grids[j].ChangeToEmpty();
                         grids[j].SetTextActive(false);
                         break;
@@ -254,6 +334,11 @@ public class BagPanel : MonoBehaviour
                 }
             }
         }
+    }
+
+    public Item GetItem(int itemId)
+    {
+        return itemDic[itemId];
     }
 
     //显示物品信息
@@ -271,6 +356,8 @@ public class BagPanel : MonoBehaviour
             if(temp.itemId<10)
             {
                 uim.UseItem(_grid);
+                //使用药品
+                AudioManager.SetAndPlayVfxSource(2);
                 DelItem(_grid);
             }
         }
@@ -298,6 +385,7 @@ public class BagPanel : MonoBehaviour
             Debug.Log("满了，找不到格子存放");
             return false;
         }
+        //如果找到可以存放的格子
         else
         {
             int d = 1;
@@ -326,13 +414,37 @@ public class BagPanel : MonoBehaviour
         }
         return true;
     }
+    public bool BuyItem(int id=-1)
+    {
+        //如果可以买到的判断不在这里写，在business;
+        try
+        {
+            if (AddItem(id))
+            {
+                AddCoin(-itemDic[id].itemPrice);
+                coinCount.text = coin.ToString();
+                return true;
+            }
+        }
+        catch
+        {
+            //可以加断网买不了东西提示
+            coin -= itemDic[id].itemPrice;
+            coinCount.text = coin.ToString();
+            Debug.Log("断网");
+            return true;
+        }
+        return false;
+    }
     public void DelItem(Grid _grid)
     {
         JsonData jd = new JsonData();
         if (_grid.GetItemID() == 2 || _grid.GetItemID() == 3)
             return;
         if (_grid.GetItemID() <= 1)
+        {
             uim.ChangeWeaponC(_grid);
+        }
         _grid.RemoveItem();//可以bool判断
         if (_grid.GetCount() <= 0)
             ItemPanel.itemP.gameObject.SetActive(false);
@@ -346,26 +458,55 @@ public class BagPanel : MonoBehaviour
     }  
     public void SellItem(Grid _grid)
     {
-        if (_grid.GetItemID() == 2 || _grid.GetItemID() == 3)
+        int price = _grid.GetItem().itemPrice;
+        if(_grid.GetItemID()<=1)
+        {
+            price = _grid.GetCount() * 4;
+        }
+        else if (_grid.GetItemID() == 2 || _grid.GetItemID() == 3)
             return;
+        //JsonData jd = new JsonData();
+        //jd["function"] = 2;
+        //jd["mode"] = 3;//出售
+        DelItem(_grid);
+        AddCoin(price);
+        //jd["gridID"] = _grid.GetGridID();
+        //jd["count"] = _grid.GetCount();
+        //jd["itemID"] = _grid.GetItemID();
+        //jd["account"] = GameManager.apJD["account"];//便于服务端管理
+        
+        //jd["coin"] = coin;
+        //GameManager.SendMessages(jd);
+    }
+    //更新物品信息，先删后加,应该在下线前做就行了
+    public void UpdateWeaponDurCount(Grid _grid)
+    {
         JsonData jd = new JsonData();
         jd["function"] = 2;
-        jd["mode"] = 3;//删除物品
-        DelItem(_grid);
-        AddCoin(5);
+        jd["mode"] = 2;//|更新服务器物品
+        jd["gridID"] = _grid.GetGridID();
+        jd["count"] = 0;
+        jd["itemID"] = _grid.GetItemID();
+        jd["account"] = GameManager.apJD["account"];//便于服务端管理
+        GameManager.SendMessages(jd);
+        jd["function"] = 2;
+        jd["mode"] = 1;//|更新服务器物品
         jd["gridID"] = _grid.GetGridID();
         jd["count"] = _grid.GetCount();
         jd["itemID"] = _grid.GetItemID();
         jd["account"] = GameManager.apJD["account"];//便于服务端管理
-        
-        //jd["coin"] = coin;
         GameManager.SendMessages(jd);
     }
-    public void AddCoin(int a)
+    public void AddCoin(int a=200)
     {
         coin += a;
         coinCount.text = coin.ToString();
-       
+        JsonData jd = new JsonData();
+        jd["function"] = 2;
+        jd["mode"] = 3;//上传金钱
+        jd["account"] = GameManager.apJD["account"];//便于服务端管理
+        jd["coin"] = coin;
+        GameManager.SendMessages(jd);
     }
     Grid CheckEmptyGrid(Item _item)
     {

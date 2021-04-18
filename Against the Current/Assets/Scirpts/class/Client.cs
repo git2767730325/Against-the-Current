@@ -22,8 +22,8 @@ public class Client
     public static void StartThread()
     {
         client = new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
-        IPEndPoint iep = new IPEndPoint(IPAddress.Parse("123.207.26.191"), 7777);
-        //IPEndPoint iep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7777);
+        //IPEndPoint iep = new IPEndPoint(IPAddress.Parse("123.207.26.191"), 7777);
+        IPEndPoint iep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7777);
         try
         {
             client.Connect(iep);

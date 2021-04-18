@@ -9,7 +9,7 @@ public class Enemy_SIght : MonoBehaviour
 
     private void OnTriggerEnter(Collider col)
     {
-        if(col.tag=="Player")
+        if(col.tag=="Player"||col.tag=="Separation")
         {
             isInSight = true;
         }
@@ -17,7 +17,7 @@ public class Enemy_SIght : MonoBehaviour
 
     private void OnTriggerExit(Collider col)
     {
-        if (col.tag == "Player")
+        if (col.tag == "Player"||col.tag=="Separation")
         {
             isInSight = false;
         }

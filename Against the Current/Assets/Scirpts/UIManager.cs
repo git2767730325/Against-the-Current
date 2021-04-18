@@ -5,10 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
+    public bool isTheLastLevel = false;
     public float timeScale = 1f;
-    public GameObject menu;
-    public Button closeGame;
-    public Button menuCloseBtn;
     public PlayerHandle ph;
     public Button btn1;
     public Button btn2;
@@ -16,6 +14,18 @@ public class UIManager : MonoBehaviour
     public GameObject bag;
     public GameObject miniMap;
     public GameObject gunTarget;
+    //破盾特效
+    public GameObject breakShieldVFX;
+    [Header("======  主菜单 =======")]
+    //游戏菜单
+    public GameObject menu;
+    public GameObject menuSetting;
+    public Button closeGame;
+    public Button menuCloseBtn;
+    public Button menuSaveBtn;
+    public Button menuSetBtn;
+    public Slider sensitivity;
+    public Slider voiceValue;
     [Header("===== 体力条 ====")]
     public ActorManager am;
     public Image panel0;
@@ -42,9 +52,17 @@ public class UIManager : MonoBehaviour
     public Text interfaceText;
     public Dialogue dialogue;
     private float i = 120;
+    [Header("===      任务，背包     交易UI        ===")]
+    public GameObject rewardTip;
+    public GameObject business;
     [Header("=========    药水使用交互   ========== ")]
     public BagPanel bp;
-    private float durationTime=45f;//药水持续时间
+    //private float durationTime=45f;//药水持续时间
+    [Header("==============回城UI  (战斗场景拖入) ==================")]
+    public GameObject goHome;
+    public Button goHomeYes;
+    public Button goHomeNo;
+    public int sceneNum = 1;
     [Header("=========   临时装备属性   ======== ")]
     public Grid tempGrid;
     [Header("========  技能UI， 复活UI  ===========")]
@@ -56,45 +74,121 @@ public class UIManager : MonoBehaviour
     public Image timeBackCD;
 
 
-    public GameObject resurrection;
     public Image timeleft;
+    public GameObject resurrection;
+    public bool canResume = true;
+    public bool isResumeing = false;
     //public float durable;
     private void Awake()
     {
-        //btn1.onClick.AddListener(ChangeWeaponA);
-        //btn2.onClick.AddListener(ChangeWeaponB);
-        //btn3.onClick.AddListener(ChangeWeaponC);
         menuCloseBtn.onClick.AddListener(CloseMenu);
         closeGame.onClick.AddListener(CloseGame);
-    }
-
-    private void CloseGame()
-    {
-        UnityEditor.EditorApplication.isPlaying = false;
+        menuSaveBtn.onClick.AddListener(SaveGame);
+        if(menuSetting!=null)
+        menuSetBtn.onClick.AddListener(SettingGame);
+        if(goHome!=null)
+        {
+            goHomeYes.onClick.AddListener(GoHomeYes);
+            goHomeNo.onClick.AddListener(GoHomeNo);
+        }
     }
 
     void Start()
     {
+        if(ph==null)
+            ph = GameObject.FindWithTag("Player").GetComponent<PlayerHandle>();
+        am = ph.transform.GetComponent<ActorManager>();
+        atcScript = am.transform.GetComponent<TimeComeBack>();
+        atcAndTcbScript = am.transform.GetComponent<AgainstTheCurrent>();
+        //GM绑定
         GameManager.GM.BindBag(bag);
         panel1.fillOrigin = 2;
         panel2.fillOrigin = 2;
         //体力应该是可序列化的,暂时用float测试
+
     }
+    private void CloseGame()
+    {
+        Debug.Log("暂时取消关闭游戏内功能");
+        //UnityEditor.EditorApplication.isPlaying = false;
+        Application.Quit();
+    }
+    private void SettingGame()
+    {
+        menuSetting.SetActive(true);
+    }
+    private void SaveGame()
+    {
+        GameManager.GM.SaveByJson();
+    }
+
+    //外部调用
+    public void SetVoiceValue()
+    {
+        Debug.Log(voiceValue.value);
+        AudioManager.SetVoiceValue(voiceValue.value);
+    }
+    public void UpdateVoiceValue()
+    {
+        voiceValue.value = GameManager.GM.voiceValue;
+    }
+
     // Start is called before the first frame update
     private void Update()
     {
+        //音量调节
         //检查是否需要锁定鼠标？
-        if((bag.gameObject.activeSelf||menu.activeSelf))
+        if (bp.gameObject.activeSelf|| menu.activeSelf)//business.gameObject.activeSelf||menu.activeSelf||goHome.activeSelf)
         {
-            Cursor.lockState = CursorLockMode.Confined;
+            if (!Cursor.visible)
+            {
+                Cursor.lockState = CursorLockMode.Confined;
+                Cursor.visible = true;
+            }
         }
         else
         {
-            Cursor.lockState = CursorLockMode.Locked;
+            if (Cursor.visible)
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
+        //修改鼠标灵敏度
+
+        //if((bag.gameObject.activeSelf||menu.activeSelf))
+        //{
+        //    Cursor.lockState = CursorLockMode.Confined;
+        //}
+        //else
+        //{
+        //    Cursor.lockState = CursorLockMode.Locked;
+        //}
 
         //逆流+时光倒流UI
-
+        timeBackCD.fillAmount=1-atcAndTcbScript.timeIndex /(float)atcAndTcbScript.maxIndex;
+        //判断逆流是否显示
+        if(atcAndTcbScript!=null)
+        {
+            if (atcAndTcbScript.enabled&&atcAndTcbScript.separationQue.Count < 5)
+            {
+                if(atc.activeSelf)
+                {
+                    atc.SetActive(false);
+                    if(atcScript.enabled)
+                    atcScript.enabled = false;
+                }
+            }
+            else
+            {
+                if (!atc.activeSelf)
+                {
+                    atc.SetActive(true);
+                    if (!atcScript.enabled)
+                        atcScript.enabled =true;
+                }
+            }
+        }
         //逆流UI
         if(atcScript.cdTimer.state!=MyTimer.State.RUN)
         {
@@ -162,74 +256,142 @@ public class UIManager : MonoBehaviour
         ///判断何时交互
         if (am.im.ecmList.Count > 0 &&Time.timeScale==1.0f)
         {
-            if (i > 240)
-            {
-                i = 120;
-            }
-            else
-                i=i+3;
-            interImg.color = new Color(1, 1, 1,i/255.0f);
+                if (i > 240)
+                {
+                    i = 120;
+                }
+                else
+                    i = i + 3;
+                interImg.color = new Color(1, 1, 1, i / 255.0f);
+            //更新UI文字和显示，容易BUG
             if (!interFace.activeSelf)
             {
                 interFace.SetActive(true);
-                if (am.im.ecmList[0].eventName == "pickup")
-                    interfaceText.text = "拾取";
-                else if(am.im.ecmList[0].eventName == "talk")
-                {
-                    interfaceText.text = "对话";
-                }
-                else if (am.im.ecmList[0].eventName == "seal")
-                {
-                    interfaceText.text = "封印";
-                }
-                else
-                    interfaceText.text = "和他讲武德(需蹲下)";
             }
-            if(am.im.ecmList[0].eventName=="pickup"&&ph.Btn1.OnPressed)
+            if (am.im.ecmList[0].eventName == "pickup")
+                interfaceText.text = "拾取";
+            else if (am.im.ecmList[0].eventName == "talk")
             {
-                //判断是否添加物品成功，决定显示的信息
-                bool f=false;
-                try
-                {
-                    f=bp.AddItem(pickItem.itemID);
-                }
-                catch
-                {
-                    Debug.Log("fankaBUG");
-                    AddItemTip(f);
-                    pickItem.SetFalse();
-                    am.im.ListUpdate();//更新列表，防止卡了一直有事件
-                }
+                interfaceText.text = "对话";
             }
+            else if (am.im.ecmList[0].eventName == "seal")
+            {
+                interfaceText.text = "封印";
+            }
+            else if (am.im.ecmList[0].eventName == "gohome")
+            {
+                interfaceText.text = "回城";
+            }
+            else
+            {
+                interfaceText.text = "和他讲武德(需蹲下)";
+            }
+                //
+            if (am.im.ecmList[0].eventName == "pickup" && ph.Btn1.OnPressed)
+                {
+                    //判断是否添加物品成功，决定显示的信息
+                    bool f = false;
+                    try
+                    {
+                        f = bp.AddItem(pickItem.itemID);
+                        AddItemTip(f);
+                        pickItem.SetFalse();
+                        am.im.ListUpdate();//更新列表，防止卡了一直有事件
+                    }
+                    catch
+                    {
+                        Debug.Log("fankaBUG");
+                        AddItemTip(f);
+                        pickItem.SetFalse();
+                        am.im.ListUpdate();//更新列表，防止卡了一直有事件
+                    }
+                }
             //如果对话，有奖励物品的话
-            else if(am.im.ecmList[0].eventName == "talk" && ph.Btn1.OnPressed)
+            else if (am.im.ecmList[0].eventName == "talk" && ph.Btn1.OnPressed)
             {
                 dialogue.Dialog();
-                if (dialogue.dialogText.text == "完成任务！")
+                RewardItem thisReward = dialogue.GetComponent<RewardItem>();
+                if (thisReward != null)
                 {
-                    RewardItem thisReward=dialogue.GetComponent<RewardItem>();
-                    if (thisReward.canReward)
+                    if (thisReward.canReward && thisReward.itemNum >=1)
                     {
-                        Debug.Log("ww");
-                        thisReward.itemNum -= 1;
-                        thisReward.canReward = false;
-                        bp.AddItem(thisReward.itemID);
+                        if (thisReward.itemID >= 0)
+                        {
+                            if (bp.AddItem(thisReward.itemID))
+                            {
+                                if(thisReward.coinNum>0)
+                                bp.AddCoin(thisReward.coinNum);
+                                Debug.Log("恭喜");
+                                thisReward.GetReward();
+                                AddItemTip(true);
+                                //pickItem.SetFalse();
+                            }
+                            else
+                            {
+                                AddItemTip(false);
+                                pickItem.SetFalse();
+                                Debug.Log("背包满了");
+                            }
+                        }
+                        else
+                        {
+                            bp.AddCoin(thisReward.coinNum);
+                            Debug.Log("恭喜");
+                            thisReward.GetReward();
+                            AddItemTip(true);
+                        }
                     }
-                    //如果添加成功，数目减一,更换文本
-                    //dialogue.InitTextList
+                    else if (thisReward.canReward)
+                    { 
+                        //更新已完成任务状况，设置奖励情况
+                        GameManager.GM.UpdateTaskState(dialogue.dialogueAsset_1.name);
+                        //thisReward.GetReward();
+                        //检查是否有其他任务完成，更换对话文本以及奖励情况
+                        dialogue.ChangeAsset(GameManager.GM.CheckTask());
+                        Debug.Log("更换文本");
+                            //更换奖励条件
+                        }
+                    }
                 }
+            else if(am.im.ecmList[0].eventName == "gohome" && ph.Btn1.OnPressed)
+            {
+            GameManager.GM.ChangeScene(1);
             }
         }
         else if(interFace.activeSelf)
         {
             interFace.SetActive(false);
         }
-        if (Time.timeScale == 0.2f|| Time.timeScale == 0.21f)//通过时间流动判断交互
+        else if(am.im.ecmList.Count<=0)
         {
-            interFace.SetActive(true);
-            interfaceText.text = "疾风突袭";
+            CloseBusinessPanel();
+        }
+        if (Time.timeScale == 0.2f|| Time.timeScale == 0.1f)//通过时间流动判断交互
+        {
+            if (!interFace.activeSelf)
+            {
+                interFace.SetActive(true);
+                interfaceText.text = "疾风突袭";
+            }
+            if(ph.KeyC.OnPressed)
+            {
+                am.ac.SetTrigger("windy");
+            }
         }
         ////耐久
+        ///
+        Debug.LogError("记得拖上破盾特效");
+        //碎盾特效
+        if(breakShieldVFX)
+        {
+            if (!am.sm.isBreakShield)
+                breakShieldVFX.SetActive(false);
+        }
+        else
+        {
+            if (am.sm.isBreakShield)
+                breakShieldVFX.SetActive(true);
+        }
         if (am.sm.durable<=2f&&tempGrid!=null&&am.sm.durable!=1)
         {
             am.sm.durable = 0f;
@@ -239,7 +401,15 @@ public class UIManager : MonoBehaviour
         }
         if(tempGrid!=null)
         {
-            tempGrid.SetDurable((int)am.sm.durable);
+            //整理后会tempGrid出错》？
+            if (am.sm.durable != tempGrid.GetCount())
+            {
+                tempGrid.SetDurable((int)am.sm.durable);
+                //次数多余了,导致重复登陆??，使用bool判断受击，以便于控制sendmessage
+                bp.UpdateWeaponDurCount(tempGrid);
+                am.sm.durable = tempGrid.GetCount();
+            }
+ 
         }
         if (am.ac.CheckAnimatorTag("gun", "Gun"))
             gunTarget.SetActive(true);
@@ -262,23 +432,65 @@ public class UIManager : MonoBehaviour
         }
 
         //复活界面提示
-        if (am.ac.CheckAnimatorState("die")&&!resurrection.activeSelf)
+        if (canResume&&am.sm.isDie&&!resurrection.activeSelf&&!am.sm.isResume)
         {
-            Invoke("Resume",3f);
+            if (!isResumeing)
+            {
+                Invoke("Resume", 3f);
+                isResumeing = true;
+            }
         }
-        else if(resurrection.activeSelf&& am.ac.CheckAnimatorState("die"))
+        else if(resurrection.activeSelf&& am.sm.isDie)
         {
-            if(timeleft.fillAmount>0)
-            timeleft.fillAmount -=1/600f;
+            if (timeleft.fillAmount > 0)
+            {
+                timeleft.fillAmount -= 1 / 300f;
+                am.sm.Hp += 0.5f;
+            }
             else
             {
-            //游戏结束
+                resurrection.SetActive(false);
+                //游戏结束
+                canResume = false;
             }    
+        }
+        //
+        else if(!canResume && am.sm.isDie)
+        {
+            Debug.Log("无法复活，游戏结束");
+            //如果是最后一关，读取存档，黑幕返回
+            if(isTheLastLevel)
+            {
+                return;
+            }
+            //提示
+
+            //3s返回上一存档
+            Invoke("ReturnTitle", 3f);
         }
         else
         {
-            resurrection.SetActive(false);
+            //状态恢复！
+            if (resurrection.activeSelf)
+            {
+                resurrection.SetActive(false);
+            }
         }
+    }
+
+
+    public void SaveSetting()
+    {
+        GameManager.GM.mouseSensitivity =sensitivity.value;
+        GameManager.GM.voiceValue = voiceValue.value;
+        Debug.Log(sensitivity.value);
+        GameManager.GM.SaveSetting();
+    }
+
+    //回到标题画面
+    public void ReturnTitle()
+    {
+        GameManager.GM.ChangeScene(7);
     }
 
     public void  AddItemTip(bool value)
@@ -294,12 +506,73 @@ public class UIManager : MonoBehaviour
         itemPickTip.SetActive(true);
     }
 
-    public void Resume()
+
+    //弹出回城对话框，游戏时间变0
+    public void TryGoHome()
     {
-        resurrection.SetActive(true);
-        timeleft.fillAmount = 1;
+        if (am.sm.Hp > 0)
+        {
+            am.sm.Hp =am.sm.HpMax;
+            //回城UI
+            Time.timeScale = 0;
+            //是按钮的是和否
+            goHome.SetActive(true);
+        }
+    }
+    //是按钮的是和否
+    public void GoHomeYes()
+    {
+        goHome.SetActive(false);
+        Time.timeScale = 1;
+        GameManager.GM.ChangeScene(sceneNum);
+        //呼叫GM，保存数据，检查，更换 场景
+
+    }
+    //是按钮的是和否
+    public void GoHomeNo()
+    {
+        goHome.SetActive(false);
+        Time.timeScale = 1;
+        timeScale = 1;
     }
 
+
+    //打开商店
+    public void OpenBusinessPanel(bool value)
+    {
+        if (!business.activeSelf)
+        {
+            Debug.Log("sdsd");
+            business.SetActive(true);
+        }
+        if (value)
+        {
+            business.SendMessage("SellEquipment");
+        }
+        else
+        {
+            business.SendMessage("SellConsum");
+        }
+        bag.SetActive(true);
+    }
+    //关闭商店
+    public void CloseBusinessPanel()
+    {
+        business.SetActive(false);
+    }
+
+    //复活
+    public void Resume()
+    {
+        //resurrectionVFX.SetActive(true);
+        resurrection.SetActive(true);
+        timeleft.fillAmount = 1;
+        isResumeing = false;
+        am.sm.Hp += 0.1f;
+        //应该有碰撞体或者锁定重新激活
+    }
+
+    //持有物品
     public void HaveItem()
     {
         am.sm.DEF += 5;
@@ -345,6 +618,28 @@ public class UIManager : MonoBehaviour
         {
             am.sm.stamina = 200f;
         }
+    }
+    public void ChangeUseItemPos(Grid _grid)
+    {
+        //tempGrid = null;
+        int itemId = 2;
+        if (_grid != null)
+        {
+            tempGrid = _grid;
+            itemId = tempGrid.GetItemID();
+        }
+        //tempGrid.GetGridID();
+        if (itemId <= 1)
+        {
+            GameManager.GM.AddWeapon(itemId + 1);
+            am.sm.durable = _grid.GetCount();
+        }
+        else
+        {
+            am.sm.durable = 0;
+            GameManager.GM.AddWeapon(3);
+        }
+        
     }
     public void CloseMenu()
     {

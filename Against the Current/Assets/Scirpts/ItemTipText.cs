@@ -34,5 +34,8 @@ public class ItemTipText : MonoBehaviour
         tip.text = itemTipList[index];
 
     }
-
+    public string GetItemTip(int index)
+    {
+        return itemTipList[index];
+    }
 }

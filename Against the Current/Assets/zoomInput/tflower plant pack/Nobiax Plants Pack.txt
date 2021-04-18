@@ -1,0 +1,24 @@
+Provided by Nobiax with Dactilardesign collaboration.
+
+
+- 5 complex plant meshes and textures: fern, palm, bamboo, tropical plant and 
+palviflora.
+- 1 grass mesh and 6 different textures.
+- 3 simple plant meshes with 20 compatible textures.
+- 5 detailed plants with flower.
+
+Each asset may contain diffuse, bump, specular and/or other maps, 512 and 1024
+squared pixel size.
+
+______________________________
+
+How to use:
+
+- Select the desired prefab from "prefabs" folder and drag and drop in the scene,
+or use with Unity terrain system.
+- Check texture import details and make sure you use the texture size you need.
+
+______________________________
+
+Contact me at dactilardesign@gmail.com.
+

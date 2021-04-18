@@ -8,6 +8,7 @@ using UnityEngine.Timeline;
 public class DirectorManager : IActorManagerInterface
 {
     public PlayableDirector pd;
+    [Header("======  timeline剧本 --player暂时需要手动拖-- ======")]
     public TimelineAsset stab;//剧本
     public TimelineAsset seal;
     private int i = 0;
@@ -16,12 +17,13 @@ public class DirectorManager : IActorManagerInterface
     {
         pd = GetComponent<PlayableDirector>();
         pd.playOnAwake = false;
+        //pd.Evaluate();
     }
 
     public void PlayTimeline(string TimelineName, ActorManager _attacker, ActorManager _victim)
     {
-        pd.Evaluate();
-        if(TimelineName=="stab")
+
+        if (TimelineName == "stab")
         {
             pd.playableAsset = Instantiate(stab);//干净
             pd.playableAsset = Instantiate(pd.playableAsset);
@@ -43,19 +45,19 @@ public class DirectorManager : IActorManagerInterface
                     {
                         MyPlayableClip myClip = (MyPlayableClip)clip.asset;
                         MyPlayableBehaviour myBehaviour = myClip.template;
-                        pd.SetReferenceValue(myClip.amPlayable.exposedName,_attacker);
+                        pd.SetReferenceValue(myClip.amPlayable.exposedName, _attacker);
                         myBehaviour.myFloat = 232;
                         //Debug.Log(myBehaviour.myFloat);
                     }
                 }
                 if (track.name == "My Playable Track2")
                 {
-                    pd.SetGenericBinding(track,_victim);
+                    pd.SetGenericBinding(track, _victim);
                     foreach (var clip in track.GetClips())//取得每个clip
                     {
                         MyPlayableClip myClip = (MyPlayableClip)clip.asset;
                         MyPlayableBehaviour myBehaviour = myClip.template;
-                        pd.SetReferenceValue(myClip.amPlayable.exposedName,_victim);
+                        pd.SetReferenceValue(myClip.amPlayable.exposedName, _victim);
                     }
                 }
                 else if (track.name == "Control Track2")
@@ -69,7 +71,7 @@ public class DirectorManager : IActorManagerInterface
                 }
             }
         }
-        else if(TimelineName == "seal")
+        else if (TimelineName == "seal")
         {
             pd.playableAsset = Instantiate(seal);
             pd.playableAsset = Instantiate(pd.playableAsset);
@@ -89,7 +91,7 @@ public class DirectorManager : IActorManagerInterface
                         MyPlayableClip myClip = (MyPlayableClip)clip.asset;
                         MyPlayableBehaviour myBehaviour = myClip.template;
                         pd.SetReferenceValue(myClip.amPlayable.exposedName, _attacker);
-                        Debug.Log("a"+clip.displayName);
+                        Debug.Log("a" + clip.displayName);
                     }
                 }
                 else if (track.name == "My Playable Track2")
@@ -115,6 +117,17 @@ public class DirectorManager : IActorManagerInterface
         }
         else if (TimelineName == "openbox")
             Debug.Log("aa");
+        pd.Evaluate();
+        if (i <= 0)
+        {
             pd.Play();
+            pd.Stop();
+            i++;
+            return;
+        }
+        //pd.Stop();
+        pd.Play();
     }
 }
+
+

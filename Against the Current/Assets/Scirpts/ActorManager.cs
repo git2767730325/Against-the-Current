@@ -5,6 +5,7 @@ using UnityEngine;
 public class ActorManager : MonoBehaviour
 {
     public MyTimer scaleTimer=new MyTimer();
+    public MyTimer scalewindyTimer=new MyTimer();
     public ActorController ac;
     public WeaponManager wm;
     public BattleManager bm;
@@ -14,9 +15,14 @@ public class ActorManager : MonoBehaviour
 
     public RuntimeAnimatorController a1;
     public AnimatorOverrideController a2;
-
-    [Header("temp use")]
+    //debug
+    private int debugTimelineI = 0;
+    [Header("temp use dunfangvfx")]
     public GameObject vfx;
+    [Header("=======  对象池生成掉落物品手动拖动player用的 =======")]
+    public ItemPool itemPool;
+    [Header("=======  受击特效，手动拖动enemy用的 =======")]
+    public HitVFX hitVFX;
 
     private void Awake()
     {
@@ -27,6 +33,7 @@ public class ActorManager : MonoBehaviour
         GameObject model = ac.model.gameObject;
         wm = Bind<WeaponManager>(model);
         sm = Bind<StateManager>(gameObject);
+        if(gameObject.tag=="Player")
         dm = Bind<DirectorManager>(gameObject);
         im = Bind<InterActorManager>(sensor);
     }
@@ -41,27 +48,52 @@ public class ActorManager : MonoBehaviour
     {
         if(scaleTimer.state==MyTimer.State.FINISHED)//还有其他判断条件
         {
+            
             Time.timeScale = 1f;
             scaleTimer.state = MyTimer.State.IDLE;
         }
-        if(Input.GetKeyDown(KeyCode.P))
+
+        else if ((scalewindyTimer.state == MyTimer.State.RUN&&sm.isGround)||scalewindyTimer.state == MyTimer.State.FINISHED)//还有其他判断条件
         {
-            ac.anim.SetBool("timeend",true);//暂时测试用；
+            Time.timeScale = 1f;
+            ac.ChangeBool("timeend",true);
+            //耦合高
+            if(gameObject.tag=="Player")
+            if(ac.camcontrol.lockState==true)
             ac.camcontrol.CancelLock();
+            scalewindyTimer.state = MyTimer.State.IDLE;
         }
-        if(sm.isWindy&&Time.timeScale==0.2f)
+        if(gameObject.tag!="Player"&& gameObject.tag !="Separation")
         {
-            if (this.name == "Player")
+            if(Time.timeScale==1f)
+                ac.ChangeBool("timeend", true);
+            else
             {
-                //ac.anim.speed = 3f;
-                Time.timeScale = 0.21f;
+                ac.ChangeBool("timeend", false);
             }
+        }
+        else if(Time.timeScale==1)
+        {
+            if (vfx != null)
+                if (vfx.activeSelf)
+                    vfx.SetActive(false);
+                else
+                    Debug.Log("检查是否有特效");
         }
     }
 
     private void FixedUpdate()
     {
         scaleTimer.Tick();
+        scalewindyTimer.Tick();
+    }
+    IEnumerator PlayTimeLineAgain(bool isSeal=false)
+    {
+        yield return new WaitForSeconds(0.2f);
+        if(!isSeal)
+        dm.PlayTimeline("stab", this, im.ecmList[0].am);
+        else
+        dm.PlayTimeline("seal", this, im.ecmList[0].am);
     }
     public void DoAction()
     {
@@ -70,7 +102,27 @@ public class ActorManager : MonoBehaviour
             if (im.ecmList[0].eventName == "stab"&&ac.CheckAnimatorTag("crouch"))
             {
                 ac.OnEnterBattle();
-                dm.PlayTimeline("stab", this, im.ecmList[0].am);
+                if (debugTimelineI <= 0)
+                {
+                    debugTimelineI++;
+                    dm.PlayTimeline("stab", this, im.ecmList[0].am);
+                    StartCoroutine("PlayTimeLineAgain", false);
+                }
+                else
+                {
+                    dm.PlayTimeline("stab", this, im.ecmList[0].am);
+                }
+                    Invoke(("DropItem"), 5f);
+                sm.weaponPower = sm.weaponMaxPower;
+                ac.model.transform.forward=Vector3.Normalize(new Vector3((-transform.position+im.ecmList[0].transform.position).x,0,
+                    (-transform.position + im.ecmList[0].transform.position).z));
+                //对象次掉落物品
+                    //任务敌人
+                    GameManager.GM.backStabEnemyNum++;
+                    GameManager.GM.sealEnemyNum++;
+
+                //GameObject eitem=itemPool.DeQueue();
+                //eitem.transform.position = im.ecmList[0].transform.position;
             }
             else if(im.ecmList[0].eventName=="seal"&&im.ecmList[0].active==true)
             {
@@ -78,8 +130,21 @@ public class ActorManager : MonoBehaviour
                 {
                     wm.wcR.wd.gameObject.SetActive(true);
                 }
-                dm.PlayTimeline("seal", this, im.ecmList[0].am);
-                im.ecmList[0].active = false;
+                if (debugTimelineI <= 0)
+                {
+                    debugTimelineI++;
+                    StartCoroutine("PlayTimeLineAgain", true);
+                    dm.PlayTimeline("seal", this, im.ecmList[0].am);
+                }
+                else
+                {
+                    dm.PlayTimeline("seal", this, im.ecmList[0].am);
+                    //生成掉落物品
+                }
+                    Invoke(("DropItem"), 2f);
+                    sm.weaponPower = sm.weaponMaxPower;
+                    im.ecmList[0].active = false;
+                    GameManager.GM.sealEnemyNum++;
             }
             else if(im.ecmList[0].eventName == "openbox")
             {
@@ -87,6 +152,16 @@ public class ActorManager : MonoBehaviour
             }
         }
     }//委托
+
+    //掉落物品
+    public void DropItem()
+    {
+        if (gameObject.activeSelf)
+        {
+            GameObject eitem = itemPool.UseTimePool();
+            eitem.transform.position = transform.position;
+        }
+    }
 
     public void SetOrCollectWeapon(bool value)
     {
@@ -104,14 +179,23 @@ public class ActorManager : MonoBehaviour
     {
         ac.SetTrigger("die");
         CapsuleCollider cc = bm.transform.parent.GetComponent<CapsuleCollider>();
-        if(cc!=null&&cc.gameObject.name!="Player")//别人不能锁定
+        if(cc!=null&&cc.gameObject.tag!="Player")//别人不能锁定
         cc.enabled = false;
-        if(gameObject.name=="Player")
-        ac.camcontrol.CancelLock();
+        if (gameObject.tag == "Player")
+        {
+            ac.camcontrol.CancelLock();
+            AudioManager.SetPlayerSource(3);
+            AudioManager.PlayPlayeraudioSource();
+        }
     }
     public void Hit()
     {
         ac.SetTrigger("hit");
+        if (this.tag == "Player")
+        {
+            AudioManager.SetPlayerSource(2);
+            AudioManager.PlayPlayeraudioSource();
+        }
     }
 
     public void HitOrDie(WeaponControl _wc)
@@ -119,12 +203,30 @@ public class ActorManager : MonoBehaviour
         Vector3 backForce = -Vector3.Normalize(_wc.wm.am.transform.position-transform.position);
         Rigidbody rig =transform.GetComponent<Rigidbody>();
         rig.AddForce(backForce*10f,ForceMode.Impulse);
-        Debug.Log("jitui");
         if (sm.Hp > 0)
         {   //敌人攻击力，*此物体减伤,玩家的武器能量条
             float percent = _wc.wm.am.sm.weaponPower / _wc.wm.am.sm.weaponMaxPower;
             if (percent >= 0.2f)
+            {
+                if (_wc.wm.am.sm.isNLAttack3)
+                {
+                    sm.AddHP(-GetAttackerATK(_wc, _wc.wm.am.sm) * (2f));
+                    Debug.Log("三段");
+                }
                 sm.AddHP(-GetAttackerATK(_wc, _wc.wm.am.sm) * (sm.isInGun ? 0.1f : 1f));
+                if(hitVFX!=null)
+                {
+                    GameObject g = hitVFX.UseTimePool();
+                    if (g == null)
+                    {
+                        Debug.Log("取不出HIT特效");
+                    }
+                    else
+                    {
+                        g.transform.position = _wc.transform.position;
+                    }
+                }
+            }
             else
                 sm.AddHP(-GetAttackerATK(_wc, _wc.wm.am.sm) * 0.1f);
             if (sm.Hp > 0)
@@ -132,12 +234,17 @@ public class ActorManager : MonoBehaviour
             else
             {
                 Die();
-                _wc.wm.am.ac.camcontrol.CancelLock();//攻击者取消锁定
+                if (gameObject.tag != "Player")
+                    if (_wc.wm.am.ac.camcontrol != null)
+                        _wc.wm.am.ac.camcontrol.CancelLock();//攻击者取消锁定
+                    else
+                        Debug.Log("同类相残");
             }
         }
-        else
+        else if(!sm.isDie)
         {
             //already dead;
+            Die();
         }
     }
 
@@ -169,14 +276,29 @@ public class ActorManager : MonoBehaviour
         if (sm.isFlip)
         {
             //如果可以触发疾风突袭
-            if (sm.canWindy)
+            if (this.gameObject.tag == "Player")
             {
-                Time.timeScale = 0.2f;
-                ac.anim.SetTrigger("windy");
-                return;
+                if (sm.canWindy)
+                {
+                    Time.timeScale = 0.2f;
+                    scalewindyTimer.StartTimer(2.4f);
+                    ac.ChangeBool("timeend", false);
+                    _wc.wm.am.ac.SetTrigger("windyidle");
+                    //疾风突袭放到UI管理里做？？感觉很不好
+                    return;
+                }
+                else
+                    sm.AddHP(-GetAttackerATK(_wc, _wc.wm.am.sm) * (sm.isInGun ? 0.1f : 1f));//敌人攻击力，*此物体减伤
             }
             else
-                sm.AddHP(-GetAttackerATK(_wc, _wc.wm.am.sm)*(sm.isInGun?0.1f:1f));//敌人攻击力，*此物体减伤
+            {
+                Time.timeScale = 0.4f;
+                scalewindyTimer.StartTimer(1f);
+                ac.ChangeBool("timeend", false);
+                //_wc.wm.am.ac.SetTrigger("windyidle");
+                ac.SetTrigger("windy");
+                ac.SetTrigger("windy");
+            }
         }
         //高耦合，低内聚的做法
         //闪避等无敌状态不处理
@@ -187,8 +309,10 @@ public class ActorManager : MonoBehaviour
             if (sm.isCounterBack)
             {
                 _wc.wm.am.BreakStun();//攻击者被盾反
+                vfx.SetActive(true);
+                sm.durable += 200;
+                GameManager.GM.backStabEnemyNum++;
                 //特效vfx,放在哪里比较好？
-                //vfx.SetActive(true);
                 if (MyTimer.State.IDLE == scaleTimer.state)//盾反时间
                 {
                     Time.timeScale = 0.01f;
@@ -213,10 +337,14 @@ public class ActorManager : MonoBehaviour
                 if (sm.durable > 2f)
                 {
                     Blocked();//绝对防御
+                    AudioManager.SetPlayerSource(1);
+                    AudioManager.PlayPlayeraudioSource();
                 }
                 else 
                 {
                     BreakBlocked();
+                    //碎盾特效,不够高效,改在UI判断耐久度里判断
+
                 }
             }
         }
@@ -232,8 +360,11 @@ public class ActorManager : MonoBehaviour
     }
 
     //被枪射击
-    public void TryDoDamage()
+    public void TryDoDamage(int i=-2000)
     {
+        if (tag == "Player" || tag == "Separation")
+            return;
+        Debug.Log(i);
         if(sm.isDefence)
         {
             Blocked();
@@ -243,9 +374,14 @@ public class ActorManager : MonoBehaviour
         {
             BreakBlocked();
         }
-        if (sm.Hp > 0)
+        if (sm.Hp >0)
         {
-            sm.AddHP(-2f);
+            //如果某状态下，伤害翻倍
+            Debug.Log(tag+"收到了枪的攻击");
+            if(tag!="Player")
+            if (transform.GetComponent<AI_Enemy>().atc_Player.separationQue.Count < 5)
+                i = -10;
+            sm.AddHP(i);
             if (sm.Hp > 0)
                 Hit();
             else
@@ -257,7 +393,7 @@ public class ActorManager : MonoBehaviour
 
     public void LockAC()
     {
-        if (gameObject.name == "Player")
+        if (gameObject.tag == "Player")
             ac.ChangeBool("lock", true);
         else
         {
@@ -268,7 +404,7 @@ public class ActorManager : MonoBehaviour
     }
     public void UnLockAC()
     {
-        if (gameObject.name == "Player")
+        if (gameObject.tag == "Player")
         {
             ac.ChangeBool("lock", false);
         }

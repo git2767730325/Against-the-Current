@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class CameraController : MonoBehaviour
 {
     public bool isAI;
+    [Header("========  ui自动获取UIM的第一个子物体=======")]
+    public UIManager uim;
     public Image lockImg;
     public float sensitivity=10f;//灵敏度
     public IUserInput ph;
@@ -31,6 +33,18 @@ public class CameraController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //恢复灵敏度
+        uim = GameObject.FindWithTag("uim").GetComponent<UIManager>();
+        if (GameManager.GM.mouseSensitivity > 5)
+        {
+            sensitivity = GameManager.GM.mouseSensitivity;
+            if(uim!=null)
+            if (uim.sensitivity != null)
+                uim.sensitivity.value = sensitivity;
+        }
+        lockImg = GameObject.FindWithTag("uim").transform.GetChild(0).
+            GetComponent<Image>();
+        
         cameraHandle = transform.parent.gameObject;
         playHandle = cameraHandle.transform.parent.gameObject;
         ActorController ac = playHandle.GetComponent<ActorController>();
@@ -39,7 +53,7 @@ public class CameraController : MonoBehaviour
         if (!isAI)
         {
             camera = Camera.main.transform.gameObject;//主相机,注意标签对
-           // Cursor.lockState = CursorLockMode.Locked;//锁定模式
+            Cursor.lockState = CursorLockMode.Locked;//锁定模式
             lockImg.enabled = false;
         }
         lockTarget = new LockTarget(null);
@@ -47,7 +61,9 @@ public class CameraController : MonoBehaviour
 
     private void Update()
     {
-
+        if(uim.sensitivity!=null)
+        if ((uim.sensitivity.value) != sensitivity)
+            sensitivity = uim.sensitivity.value;
         if (lockTarget.obj!= null)
         {
             if (!isAI)
@@ -130,6 +146,21 @@ public class CameraController : MonoBehaviour
         //camera.transform.position = transform.position;
     }
 
+    private void LateUpdate()
+    {
+        RaycastHit hit;
+        if (Physics.Linecast(transform.parent.position, transform.position, out hit))
+        {
+            if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Ground"))
+            {
+                Debug.Log(hit.point);
+                transform.position = hit.point;
+                return;
+            }
+        }
+        else
+            transform.localPosition = new Vector3(0, 0, -2.7f);
+    }
     public void LockUnLock()
     {
 
